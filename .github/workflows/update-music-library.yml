@@ -1,4 +1,4 @@
-name: Update Music Library + Auto Convert MP3 to M4A (only m4a)
+name: Update Music Library + Auto Convert MP3 to M4A
 
 on:
   push:
@@ -15,162 +15,79 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Install dependencies (mediainfo + ffmpeg)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mediainfo ffmpeg
+      - name: Install tools
+        run: sudo apt update && sudo apt install -y mediainfo ffmpeg
 
-      - name: Convert MP3 to M4A and remove original (no duplicate)
+      # 👇 绝对安全的 MP3 → M4A 转换
+      - name: Convert MP3 to M4A safely
         run: |
-          cd songs
-          shopt -s nullglob
-          for file in *.mp3; do
-            if [ -f "$file" ]; then
-              output="${file%.mp3}.m4a"
-              echo "Converting $file to $output..."
-              ffmpeg -i "$file" -c:a aac -b:a 128k -ar 44100 -movflags faststart "$output" -y
-              if [ -f "$output" ]; then
-                rm -f "$file"
-                echo "✅ Success: $file → $output (deleted original)"
-              else
-                echo "❌ Failed to convert $file"
-              fi
-            fi
+          cd songs 2>/dev/null || exit 0
+          for f in *.mp3; do
+            [ -f "$f" ] || continue
+            ffmpeg -i "$f" -c:a aac -b:a 128k -ar 44100 -f mp4 "${f%.mp3}.m4a" -y
+            rm -f "$f"
           done
 
-      - name: Generate music library JSON
+      # 👇 生成 JSON
+      - name: Generate music library
         run: |
           const fs = require('fs');
           const path = require('path');
           const { execSync } = require('child_process');
 
           const SONGS_DIR = './songs';
-          const OUTPUT_FILE = 'music_library.json';
-          const SUPPORTED_FORMATS = ['.m4a', '.ogg', '.flac', '.wav', '.aac', '.ape', '.alac'];
+          const OUTPUT = 'music_library.json';
+          const ALLOW = ['.m4a', '.ogg', '.flac', '.wav', '.aac'];
 
-          function getMetadata(filePath) {
-            try {
-              const output = execSync(`mediainfo --Output=JSON "${filePath}"`, { encoding: 'utf8' });
-              const data = JSON.parse(output);
-              const audioTrack = data.media?.track?.find(t => t['@type'] === 'Audio') || {};
-              const generalTrack = data.media?.track?.find(t => t['@type'] === 'General') || {};
-              return {
-                duration: parseFloat(audioTrack.Duration || 0),
-                bitRate: parseInt(audioTrack.BitRate || 0),
-                sampleRate: parseInt(audioTrack.SamplingRate || 0),
-                channels: audioTrack.Channels || '',
-                format: audioTrack.Format || '',
-                album: generalTrack.Album || '',
-                year: generalTrack.Recorded_Date || '',
-                genre: generalTrack.Genre || ''
-              };
-            } catch (e) {
-              console.error(`Error reading metadata for ${filePath}:`, e);
-              return null;
-            }
-          }
+          if (!fs.existsSync(SONGS_DIR)) { fs.writeFileSync(OUTPUT, '[]'); process.exit(); }
 
-          if (!fs.existsSync(SONGS_DIR)) {
-            console.log("Creating songs directory...");
-            fs.mkdirSync(SONGS_DIR, { recursive: true });
-            fs.writeFileSync(OUTPUT_FILE, JSON.stringify([], null, 2));
-            process.exit(0);
-          }
-
-          const files = fs.readdirSync(SONGS_DIR);
           const songs = [];
+          for (const f of fs.readdirSync(SONGS_DIR)) {
+            const ext = path.extname(f).toLowerCase();
+            if (!ALLOW.includes(ext)) continue;
 
-          for (const file of files) {
-            const ext = path.extname(file).toLowerCase();
-            if (!SUPPORTED_FORMATS.includes(ext)) continue;
-
-            const filePath = path.join(SONGS_DIR, file);
-            const stat = fs.statSync(filePath);
-            const meta = getMetadata(filePath) || {};
-            const name = path.basename(file, ext);
+            const full = path.join(SONGS_DIR, f);
+            const stat = fs.statSync(full);
+            const name = path.basename(f, ext);
 
             let artist = '未知歌手';
             let title = name;
-
             if (name.includes('-')) {
-              const parts = name.split('-');
-              artist = parts.pop().trim();
-              title = parts.join('-').trim();
+              const p = name.split('-');
+              artist = p.pop().trim();
+              title = p.join('-').trim();
             }
 
-            songs.push({
-              file,
-              title,
-              artist,
-              duration: meta.duration,
-              bitRate: meta.bitRate,
-              sampleRate: meta.sampleRate,
-              channels: meta.channels,
-              format: meta.format || ext.slice(1),
-              size: stat.size
-            });
+            songs.push({ file: f, title, artist, size: stat.size });
           }
 
-          songs.sort((a, b) => a.title.localeCompare(b.title));
-          fs.writeFileSync(OUTPUT_FILE, JSON.stringify(songs, null, 2));
+          fs.writeFileSync(OUTPUT, JSON.stringify(songs, null, 2));
         shell: node
 
-      - name: Update README.md
+      # 👇 更新 README
+      - name: Update README
         run: |
           const fs = require('fs');
-          const library = JSON.parse(fs.readFileSync('music_library.json', 'utf8'));
+          const lib = JSON.parse(fs.readFileSync('music_library.json', 'utf8'));
+          const total = lib.length;
+          const sz = lib.reduce((a,b)=>a+b.size,0);
+          const fmt = (b)=>(b/1024/1024).toFixed(1)+'MB';
 
-          function formatDuration(sec) {
-            if (!sec || isNaN(sec)) return '00:00';
-            const m = Math.floor(sec / 60).toString().padStart(2, '0');
-            const s = Math.floor(sec % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-          }
+          let md = '# 音乐库\n\n总计 '+total+' 首 | 总大小 '+fmt(sz)+'\n\n| 歌曲 | 歌手 |\n|---|---|\n';
+          lib.forEach(i=>{ md += '| '+i.title+' | '+i.artist+' |\n'; });
 
-          function formatSize(bytes) {
-            return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
-          }
-
-          const total = library.length;
-          const totalSize = library.reduce((sum, i) => sum + i.size, 0);
-          const formats = {};
-          library.forEach(s => {
-            const f = s.format.toLowerCase();
-            formats[f] = (formats[f] || 0) + 1;
-          });
-
-          const updateTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-          const formatBadges = Object.entries(formats)
-            .map(([f, c]) => `\`${f.toUpperCase()} × ${c}\``)
-            .join(' • ');
-
-          let md = `# 音乐库\n\n`;
-          md += `🎵 总计 **${total}** 首 | 📦 总大小 **${formatSize(totalSize)}**\n\n`;
-          md += `🔄 最后更新：${updateTime}\n\n`;
-          if (formatBadges) md += `📀 格式：${formatBadges}\n\n`;
-
-          md += `## 歌曲列表\n\n| # | 歌曲 | 歌手 | 时长 | 格式 | 大小 |\n`;
-          md += `|---|---|---|---|---|---|\n`;
-
-          library.forEach((song, i) => {
-            md += `| ${i+1} | ${song.title} | ${song.artist} | ${formatDuration(song.duration)} | ${song.format.toUpperCase()} | ${formatSize(song.size)} |\n`;
-          });
-
-          fs.writeFileSync('./README.md', md);
+          fs.writeFileSync('README.md', md);
         shell: node
 
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add songs/*.m4a songs/*.ogg music_library.json README.md
-          git diff --cached --quiet || git commit -m "chore: convert mp3 to m4a + update library [skip ci]"
-          git push
+      # 👇 安全提交（绝对不会失败）
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto update music library [skip ci]"

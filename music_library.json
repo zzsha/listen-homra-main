@@ -1,29 +1,29 @@
 [
   {
-    "fileName": "Life’s A Struggle-宋岳庭.m4a",
-    "fileSize": 2265735,
-    "extension": ".m4a",
-    "artist": "宋岳庭",
+    "fileName": "喜欢.mp3",
+    "fileSize": 8231920,
+    "extension": ".mp3",
+    "artist": "千千音乐",
     "metadata": {
-      "duration": 371.751,
-      "bitRate": 48000,
+      "duration": 205.767,
+      "bitRate": 320000,
       "sampleRate": 44100,
       "channels": 2,
-      "codec": "mp4a-40-2",
+      "codec": "MPEG Audio",
       "bitDepth": null
     }
   },
   {
-    "fileName": "如果声音不记得-吴青峰.m4a",
-    "fileSize": 1829570,
-    "extension": ".m4a",
-    "artist": "吴青峰",
+    "fileName": "山歌好比春江水 (2026五哈三月三春游歌会现场)-鹿晗.mp3",
+    "fileSize": 2622051,
+    "extension": ".mp3",
+    "artist": "鹿晗",
     "metadata": {
-      "duration": 298.934,
-      "bitRate": 48000,
+      "duration": 163.84,
+      "bitRate": 128000,
       "sampleRate": 44100,
       "channels": 2,
-      "codec": "mp4a-40-2",
+      "codec": "MPEG Audio",
       "bitDepth": null
     }
   },
@@ -52,6 +52,34 @@
       "sampleRate": 44100,
       "channels": 2,
       "codec": "mp4a-40-2",
+      "bitDepth": null
+    }
+  },
+  {
+    "fileName": "第二人生-五月天.mp3",
+    "fileSize": 10763702,
+    "extension": ".mp3",
+    "artist": "五月天",
+    "metadata": {
+      "duration": 269.061,
+      "bitRate": 320000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "MPEG Audio",
+      "bitDepth": null
+    }
+  },
+  {
+    "fileName": "第二人生.ogg",
+    "fileSize": 2952125,
+    "extension": ".ogg",
+    "artist": "千千音乐",
+    "metadata": {
+      "duration": 269.014,
+      "bitRate": 96000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "Vorbis",
       "bitDepth": null
     }
   }

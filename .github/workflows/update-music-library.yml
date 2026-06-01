@@ -25,9 +25,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mediainfo ffmpeg
 
-      # ==============================
-      # 只加这里：MP3 自动转 M4A，转完删除 MP3，永不重复
-      # ==============================
+      # MP3 自动转 M4A，转完删除原文件
       - name: Convert MP3 to M4A and remove original
         run: |
           cd songs 2>/dev/null || exit 0
@@ -37,143 +35,147 @@ jobs:
             rm -f "$f"
           done
 
+      # 生成音乐库 JSON（修复版：去掉了错误的 shell: node）
       - name: Generate music library JSON
         run: |
-          const fs = require('fs');
-          const path = require('path');
-          const { execSync } = require('child_process');
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const { execSync } = require("child_process");
 
-          const SONGS_DIR = './songs';
-          const OUTPUT_FILE = 'music_library.json';
-          const SUPPORTED_FORMATS = ['.m4a', '.flac', '.wav', '.ogg', '.aac', '.ape', '.wma', '.alac'];
+            const SONGS_DIR = "./songs";
+            const OUTPUT_FILE = "music_library.json";
+            const SUPPORTED_FORMATS = [".m4a", ".flac", ".wav", ".ogg", ".aac", ".ape", ".wma", ".alac"];
 
-          function getMetadata(filePath) {
-            try {
-              const output = execSync(`mediainfo --Output=JSON "${filePath}"`, { encoding: 'utf8' });
-              const data = JSON.parse(output);
-              const audioTrack = data.media?.track?.find(t => t['@type'] === 'Audio') || {};
-              const generalTrack = data.media?.track?.find(t => t['@type'] === 'General') || {};
-              return {
-                duration: parseFloat(audioTrack.Duration || 0),
-                bitRate: parseInt(audioTrack.BitRate || 0),
-                sampleRate: parseInt(audioTrack.SamplingRate || 0),
-                channels: audioTrack.Channels || '',
-                format: audioTrack.Format || '',
-                encoder: audioTrack.Encoded_Library || '',
-                album: generalTrack.Album || '',
-                year: generalTrack.Recorded_Date || '',
-                genre: generalTrack.Genre || ''
-              };
-            } catch (e) {
-              return null;
-            }
-          }
-
-          if (!fs.existsSync(SONGS_DIR)) {
-            fs.writeFileSync(OUTPUT_FILE, JSON.stringify([], null, 2));
-            process.exit(0);
-          }
-
-          const files = fs.readdirSync(SONGS_DIR);
-          const songs = [];
-
-          for (const file of files) {
-            const ext = path.extname(file).toLowerCase();
-            if (!SUPPORTED_FORMATS.includes(ext)) continue;
-
-            const filePath = path.join(SONGS_DIR, file);
-            const stat = fs.statSync(filePath);
-            const meta = getMetadata(filePath) || {};
-
-            const name = path.basename(file, ext);
-            let artist = 'Unknown Artist';
-            let title = name;
-
-            if (name.includes('-')) {
-              const parts = name.split('-');
-              artist = parts.pop().trim();
-              title = parts.join('-').trim();
+            function getMetadata(filePath) {
+              try {
+                const output = execSync(`mediainfo --Output=JSON "${filePath}"`, { encoding: "utf8" });
+                const data = JSON.parse(output);
+                const audioTrack = data.media?.track?.find(t => t["@type"] === "Audio") || {};
+                const generalTrack = data.media?.track?.find(t => t["@type"] === "General") || {};
+                return {
+                  duration: parseFloat(audioTrack.Duration || 0),
+                  bitRate: parseInt(audioTrack.BitRate || 0),
+                  sampleRate: parseInt(audioTrack.SamplingRate || 0),
+                  channels: audioTrack.Channels || "",
+                  format: audioTrack.Format || "",
+                  encoder: audioTrack.Encoded_Library || "",
+                  album: generalTrack.Album || "",
+                  year: generalTrack.Recorded_Date || "",
+                  genre: generalTrack.Genre || ""
+                };
+              } catch (e) {
+                return null;
+              }
             }
 
-            songs.push({
-              file,
-              title,
-              artist,
-              duration: meta.duration,
-              bitRate: meta.bitRate,
-              sampleRate: meta.sampleRate,
-              channels: meta.channels,
-              format: meta.format || ext.slice(1),
-              encoder: meta.encoder,
-              album: meta.album,
-              year: meta.year,
-              genre: meta.genre,
-              size: stat.size,
-              path: filePath
-            });
-          }
+            if (!fs.existsSync(SONGS_DIR)) {
+              fs.writeFileSync(OUTPUT_FILE, JSON.stringify([], null, 2));
+              process.exit(0);
+            }
 
-          songs.sort((a, b) => a.title.localeCompare(b.title));
-          fs.writeFileSync(OUTPUT_FILE, JSON.stringify(songs, null, 2));
-        shell: node
+            const files = fs.readdirSync(SONGS_DIR);
+            const songs = [];
 
+            for (const file of files) {
+              const ext = path.extname(file).toLowerCase();
+              if (!SUPPORTED_FORMATS.includes(ext)) continue;
+
+              const filePath = path.join(SONGS_DIR, file);
+              const stat = fs.statSync(filePath);
+              const meta = getMetadata(filePath) || {};
+
+              const name = path.basename(file, ext);
+              let artist = "Unknown Artist";
+              let title = name;
+
+              if (name.includes("-")) {
+                const parts = name.split("-");
+                artist = parts.pop().trim();
+                title = parts.join("-").trim();
+              }
+
+              songs.push({
+                file,
+                title,
+                artist,
+                duration: meta.duration,
+                bitRate: meta.bitRate,
+                sampleRate: meta.sampleRate,
+                channels: meta.channels,
+                format: meta.format || ext.slice(1),
+                encoder: meta.encoder,
+                album: meta.album,
+                year: meta.year,
+                genre: meta.genre,
+                size: stat.size,
+                path: filePath
+              });
+            }
+
+            songs.sort((a, b) => a.title.localeCompare(b.title));
+            fs.writeFileSync(OUTPUT_FILE, JSON.stringify(songs, null, 2));
+          '
+
+      # 更新 README.md（同样修复了 shell 错误）
       - name: Update README.md
         run: |
-          const fs = require('fs');
-          const library = JSON.parse(fs.readFileSync('music_library.json', 'utf8'));
+          node -e '
+            const fs = require("fs");
+            const library = JSON.parse(fs.readFileSync("music_library.json", "utf8"));
 
-          function formatDuration(sec) {
-            if (!sec || isNaN(sec)) return '00:00';
-            const m = Math.floor(sec / 60).toString().padStart(2, '0');
-            const s = Math.floor(sec % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-          }
+            function formatDuration(sec) {
+              if (!sec || isNaN(sec)) return "00:00";
+              const m = Math.floor(sec / 60).toString().padStart(2, "0");
+              const s = Math.floor(sec % 60).toString().padStart(2, "0");
+              return `${m}:${s}`;
+            }
 
-          function formatSize(bytes) {
-            return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
-          }
+            function formatSize(bytes) {
+              return (bytes / (1024 * 1024)).toFixed(1) + "MB";
+            }
 
-          const total = library.length;
-          const totalSize = library.reduce((sum, i) => sum + i.size, 0);
-          const formats = {};
-          library.forEach(s => {
-            const f = s.format.toLowerCase();
-            formats[f] = (formats[f] || 0) + 1;
-          });
+            const total = library.length;
+            const totalSize = library.reduce((sum, i) => sum + i.size, 0);
+            const formats = {};
+            library.forEach(s => {
+              const f = s.format.toLowerCase();
+              formats[f] = (formats[f] || 0) + 1;
+            });
 
-          const now = new Date();
-          const updateTime = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+            const now = new Date();
+            const updateTime = now.toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
 
-          const formatBadges = Object.entries(formats)
-            .map(([f, c]) => `\`${f.toUpperCase()} × ${c}\``)
-            .join(' • ');
+            const formatBadges = Object.entries(formats)
+              .map(([f, c]) => `\`${f.toUpperCase()} × ${c}\``)
+              .join(" • ");
 
-          let md = `# 音乐库\n\n`;
-          md += `🎵 总计 **${total}** 首 | 📦 总大小 **${formatSize(totalSize)}**\n\n`;
-          md += `🔄 最后更新：${updateTime}\n\n`;
-          if (formatBadges) md += `📀 格式：${formatBadges}\n\n`;
+            let md = `# 音乐库\n\n`;
+            md += `🎵 总计 **${total}** 首 | 📦 总大小 **${formatSize(totalSize)}**\n\n`;
+            md += `🔄 最后更新：${updateTime}\n\n`;
+            if (formatBadges) md += `📀 格式：${formatBadges}\n\n`;
 
-          md += `## 快速浏览\n\n| # | 歌曲 | 歌手 | 时长 | 格式 | 大小 |\n`;
-          md += `|---|---|---|---|---|---|\n`;
+            md += `## 快速浏览\n\n| # | 歌曲 | 歌手 | 时长 | 格式 | 大小 |\n`;
+            md += `|---|---|---|---|---|---|\n`;
 
-          library.forEach((song, i) => {
-            md += `| ${i+1} | ${song.title} | ${song.artist} | ${formatDuration(song.duration)} | ${song.format.toUpperCase()} | ${formatSize(song.size)} |\n`;
-          });
+            library.forEach((song, i) => {
+              md += `| ${i+1} | ${song.title} | ${song.artist} | ${formatDuration(song.duration)} | ${song.format.toUpperCase()} | ${formatSize(song.size)} |\n`;
+            });
 
-          md += `\n## 详细信息\n\n<details>\n<summary>点击展开</summary>\n\n`;
-          library.forEach((s, i) => {
-            md += `### ${i+1}. ${s.title} - ${s.artist}\n`;
-            md += `- 格式：${s.format.toUpperCase()}\n`;
-            md += `- 时长：${formatDuration(s.duration)}\n`;
-            md += `- 大小：${formatSize(s.size)}\n`;
-            if (s.bitRate) md += `- 码率：${(s.bitRate/1000).toFixed(0)}kbps\n`;
-            if (s.sampleRate) md += `- 采样率：${s.sampleRate}Hz\n`;
-            md += `\n`;
-          });
-          md += `</details>\n`;
+            md += `\n## 详细信息\n\n<details>\n<summary>点击展开</summary>\n\n`;
+            library.forEach((s, i) => {
+              md += `### ${i+1}. ${s.title} - ${s.artist}\n`;
+              md += `- 格式：${s.format.toUpperCase()}\n`;
+              md += `- 时长：${formatDuration(s.duration)}\n`;
+              md += `- 大小：${formatSize(s.size)}\n`;
+              if (s.bitRate) md += `- 码率：${(s.bitRate/1000).toFixed(0)}kbps\n`;
+              if (s.sampleRate) md += `- 采样率：${s.sampleRate}Hz\n`;
+              md += `\n`;
+            });
+            md += `</details>\n`;
 
-          fs.writeFileSync('./README.md', md);
-        shell: node
+            fs.writeFileSync("./README.md", md);
+          '
 
       - name: Commit and push changes
         run: |

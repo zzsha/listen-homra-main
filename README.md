@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![曲目](https://img.shields.io/badge/曲目总数-4-orange?style=for-the-badge)
+![曲目](https://img.shields.io/badge/曲目总数-5-orange?style=for-the-badge)
 ![大小](https://img.shields.io/badge/总大小-0.01GB-blue?style=for-the-badge)
 
 </div>
@@ -11,10 +11,10 @@
 
 | 项目 | 数据 |
 |------|------|
-| 🎵 曲目 | **4** 首 |
+| 🎵 曲目 | **5** 首 |
 | 💾 大小 | **0.01 GB** |
-| 📅 更新 | 2026/6/1 21:22:54 |
-| 📋 格式 | <img src="https://img.shields.io/badge/M4A-3-blue?style=flat-square" /> <img src="https://img.shields.io/badge/OGG-1-blue?style=flat-square" /> |
+| 📅 更新 | 2026/6/1 21:29:00 |
+| 📋 格式 | <img src="https://img.shields.io/badge/M4A-3-blue?style=flat-square" /> <img src="https://img.shields.io/badge/MP3-1-blue?style=flat-square" /> <img src="https://img.shields.io/badge/OGG-1-blue?style=flat-square" /> |
 
 ---
 
@@ -25,9 +25,10 @@
 | # | 歌曲 | 艺术家 | 时长 | 格式 | 大小 |
 |---|------|--------|------|------|------|
 | 1 | 山歌好比春江水-鹿晗 | 鹿晗 | 2:43.80000000000001 | M4A | 3.8 MB |
-| 2 | 开往早晨的午夜-张碧晨 | 张碧晨 | 4:48.06700000000001 | M4A | 1.7 MB |
-| 3 | 玫瑰的名字-张雨生 | 张雨生 | 4:23.63900000000001 | M4A | 1.5 MB |
-| 4 | 第二人生 | 千千音乐 | 4:29.01400000000001 | OGG | 2.8 MB |
+| 2 | 山歌好比春江水-鹿晗 | 鹿晗 | 2:43.84 | MP3 | 2.5 MB |
+| 3 | 开往早晨的午夜-张碧晨 | 张碧晨 | 4:48.06700000000001 | M4A | 1.7 MB |
+| 4 | 玫瑰的名字-张雨生 | 张雨生 | 4:23.63900000000001 | M4A | 1.5 MB |
+| 5 | 第二人生 | 千千音乐 | 4:29.01400000000001 | OGG | 2.8 MB |
 
 ### 详细信息
 
@@ -46,7 +47,22 @@
 
 </details>
 
-<details><summary><strong>2. 开往早晨的午夜-张碧晨.m4a</strong> - 张碧晨 (4:48.06700000000001)</summary>
+<details><summary><strong>2. 山歌好比春江水-鹿晗.mp3</strong> - 鹿晗 (2:43.84)</summary>
+
+| 属性 | 详情 |
+|------|------|
+| 📁 文件 | `山歌好比春江水-鹿晗.mp3` |
+| 🎤 艺术家 | 鹿晗 |
+| ⏱️ 时长 | 2:43.84 |
+| 💾 大小 | 2.5 MB |
+| 🎵 编码 | MPEG Audio |
+| 📊 比特率 | 128 kbps |
+| 🎚️ 采样率 | 44.1 kHz |
+| 🔊 声道 | 2 |
+
+</details>
+
+<details><summary><strong>3. 开往早晨的午夜-张碧晨.m4a</strong> - 张碧晨 (4:48.06700000000001)</summary>
 
 | 属性 | 详情 |
 |------|------|
@@ -61,7 +77,7 @@
 
 </details>
 
-<details><summary><strong>3. 玫瑰的名字-张雨生.m4a</strong> - 张雨生 (4:23.63900000000001)</summary>
+<details><summary><strong>4. 玫瑰的名字-张雨生.m4a</strong> - 张雨生 (4:23.63900000000001)</summary>
 
 | 属性 | 详情 |
 |------|------|
@@ -76,7 +92,7 @@
 
 </details>
 
-<details><summary><strong>4. 第二人生.ogg</strong> - 千千音乐 (4:29.01400000000001)</summary>
+<details><summary><strong>5. 第二人生.ogg</strong> - 千千音乐 (4:29.01400000000001)</summary>
 
 | 属性 | 详情 |
 |------|------|
@@ -94,4 +110,4 @@
 
 ---
 
-<sub>✨ 自动更新于 2026/6/1 21:22:54</sub>
+<sub>✨ 自动更新于 2026/6/1 21:29:00</sub>

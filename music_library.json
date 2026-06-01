@@ -14,6 +14,20 @@
     }
   },
   {
+    "fileName": "山歌好比春江水-鹿晗.mp3",
+    "fileSize": 2622051,
+    "extension": ".mp3",
+    "artist": "鹿晗",
+    "metadata": {
+      "duration": 163.84,
+      "bitRate": 128000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "MPEG Audio",
+      "bitDepth": null
+    }
+  },
+  {
     "fileName": "开往早晨的午夜-张碧晨.m4a",
     "fileSize": 1754006,
     "extension": ".m4a",

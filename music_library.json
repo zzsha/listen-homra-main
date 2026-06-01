@@ -1,0 +1,58 @@
+[
+  {
+    "fileName": "Life’s A Struggle-宋岳庭.m4a",
+    "fileSize": 2265735,
+    "extension": ".m4a",
+    "artist": "宋岳庭",
+    "metadata": {
+      "duration": 371.751,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null
+    }
+  },
+  {
+    "fileName": "如果声音不记得-吴青峰.m4a",
+    "fileSize": 1829570,
+    "extension": ".m4a",
+    "artist": "吴青峰",
+    "metadata": {
+      "duration": 298.934,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null
+    }
+  },
+  {
+    "fileName": "开往早晨的午夜-张碧晨.m4a",
+    "fileSize": 1754006,
+    "extension": ".m4a",
+    "artist": "张碧晨",
+    "metadata": {
+      "duration": 288.067,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null
+    }
+  },
+  {
+    "fileName": "玫瑰的名字-张雨生.m4a",
+    "fileSize": 1597052,
+    "extension": ".m4a",
+    "artist": "张雨生",
+    "metadata": {
+      "duration": 263.639,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null
+    }
+  }
+]

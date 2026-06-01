@@ -1,58 +1,66 @@
 [
   {
-    "fileName": "山歌好比春江水-鹿晗.mp3",
-    "fileSize": 2622051,
-    "extension": ".mp3",
+    "file": "山歌好比春江水-鹿晗.m4a",
+    "title": "山歌好比春江水",
     "artist": "鹿晗",
-    "metadata": {
-      "duration": 163.84,
-      "bitRate": 128000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "MPEG Audio",
-      "bitDepth": null
-    }
+    "duration": 163.8,
+    "bitRate": 129090,
+    "sampleRate": 44100,
+    "channels": "2",
+    "format": "AAC",
+    "encoder": "",
+    "album": "",
+    "year": "",
+    "genre": "",
+    "size": 2672673,
+    "path": "songs/山歌好比春江水-鹿晗.m4a"
   },
   {
-    "fileName": "开往早晨的午夜-张碧晨.m4a",
-    "fileSize": 1754006,
-    "extension": ".m4a",
+    "file": "开往早晨的午夜-张碧晨.m4a",
+    "title": "开往早晨的午夜",
     "artist": "张碧晨",
-    "metadata": {
-      "duration": 288.067,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null
-    }
+    "duration": 288.067,
+    "bitRate": 48000,
+    "sampleRate": 44100,
+    "channels": "2",
+    "format": "AAC",
+    "encoder": "",
+    "album": "开往早晨的午夜",
+    "year": "",
+    "genre": "",
+    "size": 1754006,
+    "path": "songs/开往早晨的午夜-张碧晨.m4a"
   },
   {
-    "fileName": "玫瑰的名字-张雨生.m4a",
-    "fileSize": 1597052,
-    "extension": ".m4a",
+    "file": "玫瑰的名字-张雨生.m4a",
+    "title": "玫瑰的名字",
     "artist": "张雨生",
-    "metadata": {
-      "duration": 263.639,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null
-    }
+    "duration": 263.639,
+    "bitRate": 48000,
+    "sampleRate": 44100,
+    "channels": "2",
+    "format": "AAC",
+    "encoder": "",
+    "album": "口是心非",
+    "year": "",
+    "genre": "",
+    "size": 1597052,
+    "path": "songs/玫瑰的名字-张雨生.m4a"
   },
   {
-    "fileName": "第二人生.ogg",
-    "fileSize": 2952125,
-    "extension": ".ogg",
-    "artist": "千千音乐",
-    "metadata": {
-      "duration": 269.014,
-      "bitRate": 96000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "Vorbis",
-      "bitDepth": null
-    }
+    "file": "第二人生.ogg",
+    "title": "第二人生",
+    "artist": "Unknown Artist",
+    "duration": 269.014,
+    "bitRate": 96000,
+    "sampleRate": 44100,
+    "channels": "2",
+    "format": "Vorbis",
+    "encoder": "Xiph.Org libVorbis I 20150105 (⛄⛄⛄⛄)",
+    "album": "第二人生（末日版）",
+    "year": "",
+    "genre": "",
+    "size": 2952125,
+    "path": "songs/第二人生.ogg"
   }
 ]

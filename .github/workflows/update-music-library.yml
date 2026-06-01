@@ -1,8 +1,11 @@
+# .github/workflows/update-music-library.yml
 name: Update Music Library
+
 on:
   push:
     branches: [main, master]
   workflow_dispatch:
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -22,21 +25,54 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y mediainfo ffmpeg
-
-      # ====================== 【唯一功能：MP3 → M4A】 ======================
-      # 只转 MP3，转完删除原 MP3
-      # 绝对不动你的 m4a
-      # ====================================================================
+      
       - name: Convert MP3 to M4A
         run: |
-          cd songs 2>/dev/null || exit 0
-          shopt -s nullglob
-          for f in *.mp3; do
-            ffmpeg -i "$f" -c:a aac -b:a 192k -ar 44100 -y "${f%.mp3}.m4a"
-            rm -f "$f"
+          echo "🔄 开始转换 MP3 文件到 M4A 格式..."
+          
+          # 创建临时目录用于转换
+          mkdir -p ./songs_converted
+          
+          # 查找所有 mp3 文件并转换
+          find ./songs -maxdepth 1 -type f -iname "*.mp3" | while read mp3file; do
+            filename=$(basename "$mp3file")
+            namewithout="${filename%.*}"
+            m4afile="./songs_converted/${namewithout}.m4a"
+            
+            echo "📝 转换: $filename -> ${namewithout}.m4a"
+            
+            # 使用 ffmpeg 转换为 m4a (AAC 编码, 192kbps)
+            if ffmpeg -i "$mp3file" -c:a aac -b:a 192k -movflags +faststart "$m4afile" -y 2>/dev/null; then
+              echo "✅ 成功转换: $filename"
+              
+              # 获取原始文件大小和转换后文件大小
+              orig_size=$(stat -c%s "$mp3file")
+              new_size=$(stat -c%s "$m4afile")
+              
+              # 显示压缩比例
+              ratio=$(echo "scale=1; $new_size * 100 / $orig_size" | bc)
+              echo "📊 压缩比例: ${ratio}% (${orig_size} -> ${new_size} bytes)"
+              
+              # 删除原始 mp3 文件
+              rm "$mp3file"
+              echo "🗑️  已删除原始文件: $filename"
+            else
+              echo "❌ 转换失败: $filename"
+              exit 1
+            fi
           done
-
-      # ====================== 以下 100% 是你原版代码，完全没动 ======================
+          
+          # 将转换后的文件移回 songs 目录
+          if [ -d "./songs_converted" ] && [ "$(ls -A ./songs_converted)" ]; then
+            mv ./songs_converted/*.m4a ./songs/ 2>/dev/null || true
+            echo "📦 已将转换后的文件移回 songs 目录"
+          fi
+          
+          # 清理临时目录
+          rm -rf ./songs_converted
+          
+          echo "✅ MP3 到 M4A 转换完成"
+      
       - name: Generate music library
         run: |
           node -e '
@@ -131,6 +167,6 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add songs/*.m4a music_library.json README.md
+          git add music_library.json README.md
           git diff --cached --quiet || git commit -m "chore: update music library [skip ci]"
           git push

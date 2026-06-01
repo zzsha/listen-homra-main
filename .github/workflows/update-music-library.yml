@@ -1,5 +1,4 @@
-# .github/workflows/update-music-library.yml
-name: Update Music Library
+name: Update Music Library + Auto Convert MP3 to M4A (only m4a)
 
 on:
   push:
@@ -11,115 +10,173 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
-      
-      - uses: actions/setup-node@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y mediainfo ffmpeg
-      
-      - name: Generate music library
+
+      # ==========================
+      # MP3 自动转 M4A，转完删除 MP3，只留 M4A
+      # ==========================
+      - name: Convert MP3 to M4A and remove original
         run: |
-          node -e '
-          const fs = require("fs");
-          const path = require("path");
-          const { execSync } = require("child_process");
-          
-          const SONGS_DIR = "./songs";
-          const OUTPUT = "./music_library.json";
-          const EXTENSIONS = [".mp3", ".m4a", ".flac", ".wav", ".ogg", ".opus", ".aac"];
-          
-          function getMetadata(file) {
+          cd songs
+          shopt -s nullglob
+          for file in *.mp3; do
+            if [ -f "$file" ]; then
+              output="${file%.mp3}.m4a"
+              ffmpeg -i "$file" -c:a aac -b:a 128k -ar 44100 -movflags faststart "$output" -y
+              rm -f "$file"
+              echo "✅ Converted: $file → $output (deleted original mp3)"
+            fi
+          done
+
+      # ==========================
+      # 生成音乐库（支持 OGG + 只识别 m4a/ogg/flac/wav/aac 等）
+      # ==========================
+      - name: Generate music library JSON
+        run: |
+          const fs = require('fs');
+          const path = require('path');
+          const { execSync } = require('child_process');
+
+          const SONGS_DIR = './songs';
+          const OUTPUT_FILE = 'music_library.json';
+
+          // 支持的格式：只保留 M4A + 常见音频，OGG 已加入
+          const SUPPORTED_FORMATS = ['.m4a', '.ogg', '.flac', '.wav', '.aac', '.ape', '.alac'];
+
+          function getMetadata(filePath) {
             try {
-              const out = execSync(`mediainfo --Output=JSON "${file}"`, { encoding: "utf8" });
-              const track = JSON.parse(out).media?.track?.find(t => t["@type"] === "Audio");
-              if (track) return {
-                duration: track.Duration ? parseFloat(track.Duration) : null,
-                bitRate: track.BitRate ? parseInt(track.BitRate) : null,
-                sampleRate: track.SamplingRate ? parseInt(track.SamplingRate) : null,
-                channels: track.Channels ? parseInt(track.Channels) : null,
-                codec: track.CodecID || track.Format,
-                bitDepth: track.BitDepth ? parseInt(track.BitDepth) : null,
-                title: track.Title,
-                album: track.Album,
-                artist: track.Artist,
-                genre: track.Genre,
-                year: track.Recorded_Date || track.Original_Released_Date
+              const output = execSync(`mediainfo --Output=JSON "${filePath}"`, { encoding: 'utf8' });
+              const data = JSON.parse(output);
+              const audioTrack = data.media?.track?.find(t => t['@type'] === 'Audio') || {};
+              const generalTrack = data.media?.track?.find(t => t['@type'] === 'General') || {};
+              return {
+                duration: parseFloat(audioTrack.Duration || 0),
+                bitRate: parseInt(audioTrack.BitRate || 0),
+                sampleRate: parseInt(audioTrack.SamplingRate || 0),
+                channels: audioTrack.Channels || '',
+                format: audioTrack.Format || '',
+                album: generalTrack.Album || '',
+                year: generalTrack.Recorded_Date || '',
+                genre: generalTrack.Genre || ''
               };
-            } catch { return null; }
+            } catch (e) {
+              return null;
+            }
           }
-          
-          const songs = fs.existsSync(SONGS_DIR) 
-            ? fs.readdirSync(SONGS_DIR)
-                .filter(f => EXTENSIONS.includes(path.extname(f).toLowerCase()))
-                .map(f => {
-                  const stats = fs.statSync(path.join(SONGS_DIR, f));
-                  const name = f.slice(0, -path.extname(f).length);
-                  const dash = name.lastIndexOf("-");
-                  return {
-                    fileName: f,
-                    fileSize: stats.size,
-                    extension: path.extname(f),
-                    artist: dash !== -1 ? name.substring(dash + 1).trim() : "千千音乐",
-                    metadata: getMetadata(path.join(SONGS_DIR, f)) || {}
-                  };
-                })
-                .sort((a, b) => a.fileName.localeCompare(b.fileName))
-            : [];
-          
-          console.log(`✅ 找到 ${songs.length} 首歌曲`);
-          fs.writeFileSync(OUTPUT, JSON.stringify(songs, null, 2));
-          '
-      
-      - name: Update README
+
+          if (!fs.existsSync(SONGS_DIR)) {
+            fs.writeFileSync(OUTPUT_FILE, JSON.stringify([], null, 2));
+            process.exit(0);
+          }
+
+          const files = fs.readdirSync(SONGS_DIR);
+          const songs = [];
+
+          for (const file of files) {
+            const ext = path.extname(file).toLowerCase();
+            if (!SUPPORTED_FORMATS.includes(ext)) continue;
+
+            const filePath = path.join(SONGS_DIR, file);
+            const stat = fs.statSync(filePath);
+            const meta = getMetadata(filePath) || {};
+            const name = path.basename(file, ext);
+
+            let artist = '未知歌手';
+            let title = name;
+
+            if (name.includes('-')) {
+              const parts = name.split('-');
+              artist = parts.pop().trim();
+              title = parts.join('-').trim();
+            }
+
+            songs.push({
+              file,
+              title,
+              artist,
+              duration: meta.duration,
+              bitRate: meta.bitRate,
+              sampleRate: meta.sampleRate,
+              channels: meta.channels,
+              format: meta.format || ext.slice(1),
+              size: stat.size
+            });
+          }
+
+          songs.sort((a, b) => a.title.localeCompare(b.title));
+          fs.writeFileSync(OUTPUT_FILE, JSON.stringify(songs, null, 2));
+        shell: node
+
+      # ==========================
+      # 更新 README
+      # ==========================
+      - name: Update README.md
         run: |
-          node -e '
-          const fs = require("fs");
-          
-          if (!fs.existsSync("./music_library.json")) process.exit(0);
-          
-          const songs = JSON.parse(fs.readFileSync("./music_library.json"));
-          const total = songs.length;
-          const totalSize = songs.reduce((s, song) => s + (song.fileSize || 0), 0);
+          const fs = require('fs');
+          const library = JSON.parse(fs.readFileSync('music_library.json', 'utf8'));
+
+          function formatDuration(sec) {
+            if (!sec || isNaN(sec)) return '00:00';
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = Math.floor(sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+          }
+
+          function formatSize(bytes) {
+            return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+          }
+
+          const total = library.length;
+          const totalSize = library.reduce((sum, i) => sum + i.size, 0);
           const formats = {};
-          songs.forEach(s => formats[s.extension] = (formats[s.extension] || 0) + 1);
-          const lastUpdate = new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
-          
-          const formatDuration = (s) => s ? `${Math.floor(s/60)}:${(s%60).toString().padStart(2,"0")}` : "--:--";
-          const formatSize = (b) => b ? `${(b/(1024*1024)).toFixed(1)} MB` : "未知";
-          const formatBitrate = (b) => b ? (b>1e6 ? `${(b/1e6).toFixed(1)} Mbps` : `${Math.round(b/1000)} kbps`) : "未知";
-          
-          const table = `| # | 歌曲 | 艺术家 | 时长 | 格式 | 大小 |\n|---|------|--------|------|------|------|\n${songs.map((s,i) => 
-            `| ${i+1} | ${s.fileName.replace(/\.[^/.]+$/, "").slice(0, 40)} | ${s.artist} | ${formatDuration(s.metadata?.duration)} | ${s.extension.toUpperCase().slice(1)} | ${formatSize(s.fileSize)} |`
-          ).join("\n")}`;
-          
-          const details = songs.map((s,i) => {
-            const m = s.metadata;
-            return `<details><summary><strong>${i+1}. ${s.fileName}</strong> - ${s.artist} (${formatDuration(m?.duration)})</summary>\n\n| 属性 | 详情 |\n|------|------|\n| 📁 文件 | \`${s.fileName}\` |\n| 🎤 艺术家 | ${s.artist} |\n| ⏱️ 时长 | ${formatDuration(m?.duration)} |\n| 💾 大小 | ${formatSize(s.fileSize)} |\n| 🎵 编码 | ${m?.codec || "未知"} |\n| 📊 比特率 | ${formatBitrate(m?.bitRate)} |\n| 🎚️ 采样率 | ${m?.sampleRate ? (m.sampleRate/1000).toFixed(1) + " kHz" : "未知"} |\n| 🔊 声道 | ${m?.channels || "未知"} |\n${m?.album ? `| 💿 专辑 | ${m.album} |\n` : ""}${m?.genre ? `| 🎸 流派 | ${m.genre} |\n` : ""}${m?.year ? `| 📅 年份 | ${m.year} |\n` : ""}\n</details>\n`;
-          }).join("\n");
-          
-          const formatBadges = Object.entries(formats).map(([ext, count]) => 
-            `<img src="https://img.shields.io/badge/${ext.slice(1).toUpperCase()}-${count}-blue?style=flat-square" />`
-          ).join(" ");
-          
-          const readme = `# 🎵 音乐库\n\n<div align="center">\n\n![曲目](https://img.shields.io/badge/曲目总数-${total}-orange?style=for-the-badge)\n![大小](https://img.shields.io/badge/总大小-${(totalSize/(1024*1024*1024)).toFixed(2)}GB-blue?style=for-the-badge)\n\n</div>\n\n## 📊 统计\n\n| 项目 | 数据 |\n|------|------|\n| 🎵 曲目 | **${total}** 首 |\n| 💾 大小 | **${(totalSize/(1024*1024*1024)).toFixed(2)} GB** |\n| 📅 更新 | ${lastUpdate} |\n| 📋 格式 | ${formatBadges} |\n\n---\n\n## 🎼 音乐列表\n\n### 快速浏览\n\n${table}\n\n### 详细信息\n\n${details}\n\n---\n\n<sub>✨ 自动更新于 ${lastUpdate}</sub>\n`;
-          
-          fs.writeFileSync("./README.md", readme);
-          console.log("✅ README 已更新");
-          '
-      
-      - name: Commit changes
+          library.forEach(s => {
+            const f = s.format.toLowerCase();
+            formats[f] = (formats[f] || 0) + 1;
+          });
+
+          const updateTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+          const formatBadges = Object.entries(formats)
+            .map(([f, c]) => `\`${f.toUpperCase()} × ${c}\``)
+            .join(' • ');
+
+          let md = `# 音乐库\n\n`;
+          md += `🎵 总计 **${total}** 首 | 📦 总大小 **${formatSize(totalSize)}**\n\n`;
+          md += `🔄 最后更新：${updateTime}\n\n`;
+          if (formatBadges) md += `📀 格式：${formatBadges}\n\n`;
+
+          md += `## 歌曲列表\n\n| # | 歌曲 | 歌手 | 时长 | 格式 | 大小 |\n`;
+          md += `|---|---|---|---|---|---|\n`;
+
+          library.forEach((song, i) => {
+            md += `| ${i+1} | ${song.title} | ${song.artist} | ${formatDuration(song.duration)} | ${song.format.toUpperCase()} | ${formatSize(song.size)} |\n`;
+          });
+
+          fs.writeFileSync('./README.md', md);
+        shell: node
+
+      # ==========================
+      # 提交并推送
+      # ==========================
+      - name: Commit and push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add music_library.json README.md
-          git diff --cached --quiet || git commit -m "chore: update music library [skip ci]"
+          git add songs/*.m4a songs/*.ogg music_library.json README.md
+          git del songs/*.mp3 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore: convert mp3 to m4a (only m4a) + support ogg [skip ci]"
           git push

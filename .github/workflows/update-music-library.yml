@@ -26,51 +26,82 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mediainfo ffmpeg
       
-      - name: Convert MP3 to M4A
+      - name: Convert MP3 to M4A (optimized for web streaming)
         run: |
-          echo "🔄 开始转换 MP3 文件到 M4A 格式..."
+          echo "🔄 开始转换 MP3 文件到 M4A 格式（网页流式播放优化）..."
           
-          # 创建临时目录用于转换
           mkdir -p ./songs_converted
           
-          # 查找所有 mp3 文件并转换
           find ./songs -maxdepth 1 -type f -iname "*.mp3" | while read mp3file; do
             filename=$(basename "$mp3file")
             namewithout="${filename%.*}"
             m4afile="./songs_converted/${namewithout}.m4a"
             
+            # 检查是否已存在对应的 m4a
+            if [ -f "./songs/${namewithout}.m4a" ]; then
+              echo "⏭️ 跳过已存在的: ${namewithout}.m4a"
+              continue
+            fi
+            
             echo "📝 转换: $filename -> ${namewithout}.m4a"
             
-            # 使用 ffmpeg 转换为 m4a (AAC 编码, 192kbps)
-            if ffmpeg -i "$mp3file" -c:a aac -b:a 192k -movflags +faststart "$m4afile" -y 2>/dev/null; then
-              echo "✅ 成功转换: $filename"
+            # 获取原 MP3 比特率，用于保持音质一致
+            orig_bitrate=$(ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 "$mp3file" 2>/dev/null)
+            
+            # 如果无法获取比特率，默认使用 128k
+            if [ -z "$orig_bitrate" ] || [ "$orig_bitrate" = "N/A" ] || [ "$orig_bitrate" -lt 64000 ]; then
+              target_bitrate="128k"
+            else
+              # 转换为 kbps，并保持原比特率或稍低
+              orig_kbps=$(echo "scale=0; $orig_bitrate / 1000" | bc)
+              if [ $orig_kbps -gt 192 ]; then
+                target_bitrate="192k"
+              else
+                target_bitrate="${orig_kbps}k"
+              fi
+            fi
+            
+            echo "   目标比特率: $target_bitrate"
+            
+            # 优化参数：
+            # -movflags +faststart: 将 moov atom 移到文件开头，实现快速流式加载
+            # -c:a aac: 使用 AAC 编码
+            # -b:a: 设置比特率
+            # -ac 2: 确保立体声
+            # -ar 44100: 标准采样率
+            
+            if ffmpeg -i "$mp3file" \
+              -map_metadata 0 \
+              -id3v2_version 3 \
+              -c:a aac \
+              -b:a $target_bitrate \
+              -ac 2 \
+              -ar 44100 \
+              -movflags +faststart \
+              "$m4afile" -y 2>/dev/null; then
               
-              # 获取原始文件大小和转换后文件大小
               orig_size=$(stat -c%s "$mp3file")
               new_size=$(stat -c%s "$m4afile")
-              
-              # 显示压缩比例
               ratio=$(echo "scale=1; $new_size * 100 / $orig_size" | bc)
-              echo "📊 压缩比例: ${ratio}% (${orig_size} -> ${new_size} bytes)"
+              echo "   ✅ 转换成功 (大小: ${ratio}% 原大小)"
               
-              # 删除原始 mp3 文件
+              # 验证 moov atom 位置（用于流式播放）
+              if ffmpeg -v trace -i "$m4afile" 2>&1 | grep -q "moov atom.*found"; then
+                echo "   📱 已优化网页流式播放"
+              fi
+              
               rm "$mp3file"
-              echo "🗑️  已删除原始文件: $filename"
             else
-              echo "❌ 转换失败: $filename"
+              echo "   ❌ 转换失败: $filename"
               exit 1
             fi
           done
           
-          # 将转换后的文件移回 songs 目录
           if [ -d "./songs_converted" ] && [ "$(ls -A ./songs_converted)" ]; then
             mv ./songs_converted/*.m4a ./songs/ 2>/dev/null || true
-            echo "📦 已将转换后的文件移回 songs 目录"
           fi
           
-          # 清理临时目录
           rm -rf ./songs_converted
-          
           echo "✅ MP3 到 M4A 转换完成"
       
       - name: Generate music library
@@ -168,5 +199,6 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add music_library.json README.md
+          git add songs/
           git diff --cached --quiet || git commit -m "chore: update music library [skip ci]"
           git push

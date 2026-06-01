@@ -1,20 +1,6 @@
 [
   {
-    "fileName": "喜欢.mp3",
-    "fileSize": 8231920,
-    "extension": ".mp3",
-    "artist": "千千音乐",
-    "metadata": {
-      "duration": 205.767,
-      "bitRate": 320000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "MPEG Audio",
-      "bitDepth": null
-    }
-  },
-  {
-    "fileName": "山歌好比春江水 (2026五哈三月三春游歌会现场)-鹿晗.mp3",
+    "fileName": "山歌好比春江水-鹿晗.mp3",
     "fileSize": 2622051,
     "extension": ".mp3",
     "artist": "鹿晗",
@@ -52,20 +38,6 @@
       "sampleRate": 44100,
       "channels": 2,
       "codec": "mp4a-40-2",
-      "bitDepth": null
-    }
-  },
-  {
-    "fileName": "第二人生-五月天.mp3",
-    "fileSize": 10763702,
-    "extension": ".mp3",
-    "artist": "五月天",
-    "metadata": {
-      "duration": 269.061,
-      "bitRate": 320000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "MPEG Audio",
       "bitDepth": null
     }
   },

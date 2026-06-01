@@ -2,8 +2,8 @@
 
 <div align="center">
 
-![曲目](https://img.shields.io/badge/曲目总数-6-orange?style=for-the-badge)
-![大小](https://img.shields.io/badge/总大小-0.03GB-blue?style=for-the-badge)
+![曲目](https://img.shields.io/badge/曲目总数-4-orange?style=for-the-badge)
+![大小](https://img.shields.io/badge/总大小-0.01GB-blue?style=for-the-badge)
 
 </div>
 
@@ -11,10 +11,10 @@
 
 | 项目 | 数据 |
 |------|------|
-| 🎵 曲目 | **6** 首 |
-| 💾 大小 | **0.03 GB** |
-| 📅 更新 | 2026/6/1 14:48:33 |
-| 📋 格式 | <img src="https://img.shields.io/badge/MP3-3-blue?style=flat-square" /> <img src="https://img.shields.io/badge/M4A-2-blue?style=flat-square" /> <img src="https://img.shields.io/badge/OGG-1-blue?style=flat-square" /> |
+| 🎵 曲目 | **4** 首 |
+| 💾 大小 | **0.01 GB** |
+| 📅 更新 | 2026/6/1 18:48:36 |
+| 📋 格式 | <img src="https://img.shields.io/badge/MP3-1-blue?style=flat-square" /> <img src="https://img.shields.io/badge/M4A-2-blue?style=flat-square" /> <img src="https://img.shields.io/badge/OGG-1-blue?style=flat-square" /> |
 
 ---
 
@@ -24,35 +24,18 @@
 
 | # | 歌曲 | 艺术家 | 时长 | 格式 | 大小 |
 |---|------|--------|------|------|------|
-| 1 | 喜欢 | 千千音乐 | 3:25.766999999999996 | MP3 | 7.9 MB |
-| 2 | 山歌好比春江水 (2026五哈三月三春游歌会现场)-鹿晗 | 鹿晗 | 2:43.84 | MP3 | 2.5 MB |
-| 3 | 开往早晨的午夜-张碧晨 | 张碧晨 | 4:48.06700000000001 | M4A | 1.7 MB |
-| 4 | 玫瑰的名字-张雨生 | 张雨生 | 4:23.63900000000001 | M4A | 1.5 MB |
-| 5 | 第二人生-五月天 | 五月天 | 4:29.06099999999998 | MP3 | 10.3 MB |
-| 6 | 第二人生 | 千千音乐 | 4:29.01400000000001 | OGG | 2.8 MB |
+| 1 | 山歌好比春江水-鹿晗 | 鹿晗 | 2:43.84 | MP3 | 2.5 MB |
+| 2 | 开往早晨的午夜-张碧晨 | 张碧晨 | 4:48.06700000000001 | M4A | 1.7 MB |
+| 3 | 玫瑰的名字-张雨生 | 张雨生 | 4:23.63900000000001 | M4A | 1.5 MB |
+| 4 | 第二人生 | 千千音乐 | 4:29.01400000000001 | OGG | 2.8 MB |
 
 ### 详细信息
 
-<details><summary><strong>1. 喜欢.mp3</strong> - 千千音乐 (3:25.766999999999996)</summary>
+<details><summary><strong>1. 山歌好比春江水-鹿晗.mp3</strong> - 鹿晗 (2:43.84)</summary>
 
 | 属性 | 详情 |
 |------|------|
-| 📁 文件 | `喜欢.mp3` |
-| 🎤 艺术家 | 千千音乐 |
-| ⏱️ 时长 | 3:25.766999999999996 |
-| 💾 大小 | 7.9 MB |
-| 🎵 编码 | MPEG Audio |
-| 📊 比特率 | 320 kbps |
-| 🎚️ 采样率 | 44.1 kHz |
-| 🔊 声道 | 2 |
-
-</details>
-
-<details><summary><strong>2. 山歌好比春江水 (2026五哈三月三春游歌会现场)-鹿晗.mp3</strong> - 鹿晗 (2:43.84)</summary>
-
-| 属性 | 详情 |
-|------|------|
-| 📁 文件 | `山歌好比春江水 (2026五哈三月三春游歌会现场)-鹿晗.mp3` |
+| 📁 文件 | `山歌好比春江水-鹿晗.mp3` |
 | 🎤 艺术家 | 鹿晗 |
 | ⏱️ 时长 | 2:43.84 |
 | 💾 大小 | 2.5 MB |
@@ -63,7 +46,7 @@
 
 </details>
 
-<details><summary><strong>3. 开往早晨的午夜-张碧晨.m4a</strong> - 张碧晨 (4:48.06700000000001)</summary>
+<details><summary><strong>2. 开往早晨的午夜-张碧晨.m4a</strong> - 张碧晨 (4:48.06700000000001)</summary>
 
 | 属性 | 详情 |
 |------|------|
@@ -78,7 +61,7 @@
 
 </details>
 
-<details><summary><strong>4. 玫瑰的名字-张雨生.m4a</strong> - 张雨生 (4:23.63900000000001)</summary>
+<details><summary><strong>3. 玫瑰的名字-张雨生.m4a</strong> - 张雨生 (4:23.63900000000001)</summary>
 
 | 属性 | 详情 |
 |------|------|
@@ -93,22 +76,7 @@
 
 </details>
 
-<details><summary><strong>5. 第二人生-五月天.mp3</strong> - 五月天 (4:29.06099999999998)</summary>
-
-| 属性 | 详情 |
-|------|------|
-| 📁 文件 | `第二人生-五月天.mp3` |
-| 🎤 艺术家 | 五月天 |
-| ⏱️ 时长 | 4:29.06099999999998 |
-| 💾 大小 | 10.3 MB |
-| 🎵 编码 | MPEG Audio |
-| 📊 比特率 | 320 kbps |
-| 🎚️ 采样率 | 44.1 kHz |
-| 🔊 声道 | 2 |
-
-</details>
-
-<details><summary><strong>6. 第二人生.ogg</strong> - 千千音乐 (4:29.01400000000001)</summary>
+<details><summary><strong>4. 第二人生.ogg</strong> - 千千音乐 (4:29.01400000000001)</summary>
 
 | 属性 | 详情 |
 |------|------|
@@ -126,4 +94,4 @@
 
 ---
 
-<sub>✨ 自动更新于 2026/6/1 14:48:33</sub>
+<sub>✨ 自动更新于 2026/6/1 18:48:36</sub>

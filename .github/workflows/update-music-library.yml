@@ -16,36 +16,36 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install dependencies (mediainfo + ffmpeg)
         run: |
           sudo apt-get update
           sudo apt-get install -y mediainfo ffmpeg
 
-      # ==========================
-      # MP3 自动转 M4A，转完删除 MP3，只留 M4A
-      # ==========================
-      - name: Convert MP3 to M4A and remove original
+      - name: Convert MP3 to M4A and remove original (no duplicate)
         run: |
           cd songs
           shopt -s nullglob
           for file in *.mp3; do
             if [ -f "$file" ]; then
               output="${file%.mp3}.m4a"
+              echo "Converting $file to $output..."
               ffmpeg -i "$file" -c:a aac -b:a 128k -ar 44100 -movflags faststart "$output" -y
-              rm -f "$file"
-              echo "✅ Converted: $file → $output (deleted original mp3)"
+              if [ -f "$output" ]; then
+                rm -f "$file"
+                echo "✅ Success: $file → $output (deleted original)"
+              else
+                echo "❌ Failed to convert $file"
+              fi
             fi
           done
 
-      # ==========================
-      # 生成音乐库（支持 OGG + 只识别 m4a/ogg/flac/wav/aac 等）
-      # ==========================
       - name: Generate music library JSON
         run: |
           const fs = require('fs');
@@ -54,8 +54,6 @@ jobs:
 
           const SONGS_DIR = './songs';
           const OUTPUT_FILE = 'music_library.json';
-
-          // 支持的格式：只保留 M4A + 常见音频，OGG 已加入
           const SUPPORTED_FORMATS = ['.m4a', '.ogg', '.flac', '.wav', '.aac', '.ape', '.alac'];
 
           function getMetadata(filePath) {
@@ -75,11 +73,14 @@ jobs:
                 genre: generalTrack.Genre || ''
               };
             } catch (e) {
+              console.error(`Error reading metadata for ${filePath}:`, e);
               return null;
             }
           }
 
           if (!fs.existsSync(SONGS_DIR)) {
+            console.log("Creating songs directory...");
+            fs.mkdirSync(SONGS_DIR, { recursive: true });
             fs.writeFileSync(OUTPUT_FILE, JSON.stringify([], null, 2));
             process.exit(0);
           }
@@ -122,9 +123,6 @@ jobs:
           fs.writeFileSync(OUTPUT_FILE, JSON.stringify(songs, null, 2));
         shell: node
 
-      # ==========================
-      # 更新 README
-      # ==========================
       - name: Update README.md
         run: |
           const fs = require('fs');
@@ -169,14 +167,10 @@ jobs:
           fs.writeFileSync('./README.md', md);
         shell: node
 
-      # ==========================
-      # 提交并推送
-      # ==========================
       - name: Commit and push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add songs/*.m4a songs/*.ogg music_library.json README.md
-          git del songs/*.mp3 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "chore: convert mp3 to m4a (only m4a) + support ogg [skip ci]"
+          git diff --cached --quiet || git commit -m "chore: convert mp3 to m4a + update library [skip ci]"
           git push

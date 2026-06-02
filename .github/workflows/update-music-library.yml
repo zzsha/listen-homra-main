@@ -26,16 +26,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mediainfo
           
-          # 下载静态编译的 ffmpeg（仅二进制文件，约 70MB）
-          # 使用更可靠的 CDN（GitHub Releases 直链）
           echo "下载 ffmpeg ..."
-          curl -L -o ffmpeg https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
-          # 直接解压二进制文件（避免目录结构问题）
-          tar -xvf ffmpeg-master-latest-linux64-gpl.tar.xz --strip-components=2 --wildcards '*/bin/ffmpeg' '*/bin/ffprobe'
+          # 修正：输出文件名为 ffmpeg.tar.xz
+          curl -L -o ffmpeg.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
+          # 解压
+          tar -xvf ffmpeg.tar.xz --strip-components=2 --wildcards '*/bin/ffmpeg' '*/bin/ffprobe'
           chmod +x ffmpeg ffprobe
           sudo mv ffmpeg /usr/local/bin/
           sudo mv ffprobe /usr/local/bin/
-          rm -f ffmpeg-master-latest-linux64-gpl.tar.xz
+          rm -f ffmpeg.tar.xz
           
           # 验证支持 libfdk_aac
           ffmpeg -encoders | grep -i fdk_aac || (echo "libfdk_aac 不可用" && exit 1)
@@ -46,11 +45,6 @@ jobs:
             if [ -f "$mp3file" ]; then
               filename=$(basename "$mp3file" .mp3)
               echo "转换: $mp3file"
-              # 参数说明：
-              # -c:a libfdk_aac -profile:a aac_he  -> HE-AAC 编码
-              # -b:a 48k -ac 2 -ar 44100           -> 与能播放的 M4A 一致
-              # -movflags +faststart                -> 网页优化
-              # -f mp4 -brand mp42                  -> 强制 MIME video/mp4
               ffmpeg -i "$mp3file" -c:a libfdk_aac -profile:a aac_he -b:a 48k -ac 2 -ar 44100 -movflags +faststart -f mp4 -brand mp42 "./songs/${filename}.m4a" -y
               if [ $? -eq 0 ]; then
                 rm -f "$mp3file"

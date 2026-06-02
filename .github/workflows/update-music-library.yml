@@ -26,88 +26,47 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mediainfo ffmpeg
       
-      - name: Debug - Check existing M4A format
+      - name: Convert MP3 to M4A (Low Bitrate for Web Compat)
         run: |
-          echo "=== 检查现有的M4A文件格式（作为参考）==="
-          for m4afile in ./songs/*.m4a; do
-            if [ -f "$m4afile" ]; then
-              echo "文件: $(basename "$m4afile")"
-              ffprobe -v error -show_entries stream=codec_name,codec_tag_string -of default=noprint_wrappers=1 "$m4afile" 2>&1 | head -5
-              echo "---"
-            fi
-            break  # 只检查第一个文件
-          done
-      
-      - name: Convert MP3 to M4A (Debug - Multiple methods)
-        run: |
-          echo "🔄 尝试多种转换方法..."
+          echo "🔄 开始转换 MP3 到 M4A (使用网页兼容比特率)..."
           CONVERTED_COUNT=0
           
           for mp3file in ./songs/*.mp3; do
             if [ -f "$mp3file" ]; then
               filename=$(basename "$mp3file" .mp3)
+              m4afile="./songs/${filename}.m4a"
               
-              # 方法1: 使用 libfdk_aac (如果可用) 或标准aac
-              m4afile1="./songs/${filename}_test1.m4a"
-              echo "方法1: 标准AAC编码"
-              ffmpeg -i "$mp3file" -c:a aac -b:a 128k -ac 2 -ar 44100 "$m4afile1" -y 2>&1 | grep -E "(Audio|Output)"
+              echo "转换: $mp3file"
               
-              # 方法2: 复制原始音频流到M4A容器 (保持原编码)
-              m4afile2="./songs/${filename}_test2.m4a"
-              echo "方法2: 复制原始流到M4A容器"
-              ffmpeg -i "$mp3file" -c:a copy -f mp4 "$m4afile2" -y 2>&1 | grep -E "(Audio|Output)"
+              # 使用 64kbps 比特率（与正常播放的文件一致）
+              ffmpeg -i "$mp3file" \
+                     -c:a aac \
+                     -b:a 64k \
+                     -ac 2 \
+                     -ar 44100 \
+                     -movflags +faststart \
+                     "$m4afile" -y 2>&1 | grep -E "(Audio|Output|bitrate)"
               
-              # 方法3: 使用较低版本兼容参数
-              m4afile3="./songs/${filename}_test3.m4a"
-              echo "方法3: 兼容模式"
-              ffmpeg -i "$mp3file" -c:a aac -strict experimental -b:a 128k "$m4afile3" -y 2>&1 | grep -E "(Audio|Output)"
-              
-              echo "=== 检查生成的文件 ==="
-              for testfile in "$m4afile1" "$m4afile2" "$m4afile3"; do
-                if [ -f "$testfile" ]; then
-                  echo "检查: $(basename "$testfile")"
-                  ffprobe -v error -show_entries format=format_name -show_entries stream=codec_name,codec_tag_string "$testfile" 2>&1
-                  echo "文件大小: $(stat -c%s "$testfile") bytes"
-                  echo "---"
+              if [ $? -eq 0 ] && [ -f "$m4afile" ] && [ -s "$m4afile" ]; then
+                # 验证比特率
+                BITRATE=$(ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1 "$m4afile" 2>/dev/null)
+                if [ -n "$BITRATE" ] && [ "$BITRATE" -le 128000 ]; then
+                  rm -f "$mp3file"
+                  echo "✅ 转换成功: ${filename}.m4a (比特率: $(echo "scale=0; $BITRATE/1000" | bc) kbps)"
+                  CONVERTED_COUNT=$((CONVERTED_COUNT + 1))
+                else
+                  echo "⚠️ 比特率异常: ${BITRATE:-未知}"
+                  rm -f "$m4afile"
                 fi
-              done
-              
-              # 选择最佳方法：使用方法1（标准AAC）并替换原文件
-              if [ -f "$m4afile1" ] && [ $(stat -c%s "$m4afile1") -gt 1000 ]; then
-                mv "$m4afile1" "./songs/${filename}.m4a"
-                rm -f "$mp3file" "$m4afile2" "$m4afile3" 2>/dev/null
-                echo "✅ 使用方法1转换成功: ${filename}.m4a"
-                CONVERTED_COUNT=$((CONVERTED_COUNT + 1))
               else
-                echo "❌ 所有方法都失败: $mp3file"
-                rm -f "$m4afile1" "$m4afile2" "$m4afile3" 2>/dev/null
+                echo "❌ 转换失败: $mp3file"
+                rm -f "$m4afile"
               fi
-              
-              echo "================================"
-              break  # 先只转换一个文件用于测试
             fi
           done
           
-          echo "📊 测试转换完成"
-      
-      - name: Debug - Verify converted file
-        run: |
-          echo "=== 验证转换后的M4A文件 ==="
-          for m4afile in ./songs/*.m4a; do
-            if [ -f "$m4afile" ]; then
-              echo "文件: $(basename "$m4afile")"
-              echo "完整信息:"
-              ffprobe -v error -show_format -show_streams "$m4afile" 2>&1 | grep -E "(codec_name|sample_rate|channels|bit_rate|format_name)"
-              echo ""
-              echo "MIME类型:"
-              file --mime-type "$m4afile"
-              echo "========================"
-            fi
-          done
-      
-      # 如果需要停止以便检查结果，取消下面的注释
-      # - name: Pause for manual check
-      #   run: sleep 60
+          echo "📊 成功转换 $CONVERTED_COUNT 个 MP3 文件"
+          echo "💡 使用 64kbps AAC 编码，确保网页播放器兼容性"
       
       - name: Generate music library
         run: |

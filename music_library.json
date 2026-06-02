@@ -42,17 +42,18 @@
     }
   },
   {
-    "fileName": "第二人生.ogg",
-    "fileSize": 2952125,
-    "extension": ".ogg",
-    "artist": "千千音乐",
+    "fileName": "第二人生-五月天.m4a",
+    "fileSize": 1686983,
+    "extension": ".m4a",
+    "artist": "五月天",
     "metadata": {
       "duration": 269.014,
-      "bitRate": 96000,
+      "bitRate": 48000,
       "sampleRate": 44100,
       "channels": 2,
-      "codec": "Vorbis",
-      "bitDepth": null
+      "codec": "mp4a-40-2",
+      "bitDepth": null,
+      "title": "第二人生"
     }
   }
 ]

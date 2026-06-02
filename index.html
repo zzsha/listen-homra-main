@@ -319,7 +319,7 @@
             const SWIPE_THRESHOLD = 50;
             const STORAGE_KEY = 'ttplayer_state';
 
-            // 预加载资源管理
+            // 预加载链接元素
             let preloadLink = null;
 
             const formatTime = (sec) => {
@@ -420,7 +420,7 @@
                 saveState();
             };
 
-            // 预加载下一首音频（使用相对路径）
+            // 预加载下一首（延迟1秒，避免干扰当前播放）
             const preloadNext = () => {
                 if (playlist.length === 0) return;
                 let nextIndex = (currentIndex + 1) % playlist.length;
@@ -433,9 +433,7 @@
                 if (!nextSong) return;
 
                 const url = `songs/${nextSong.fileName}`;
-                if (preloadLink) {
-                    preloadLink.remove();
-                }
+                if (preloadLink) preloadLink.remove();
                 preloadLink = document.createElement('link');
                 preloadLink.rel = 'preload';
                 preloadLink.as = 'audio';
@@ -443,6 +441,7 @@
                 document.head.appendChild(preloadLink);
             };
 
+            // 加载歌曲（核心优化：直接设置src，不重建source）
             const loadSong = (index, seekTime = 0) => {
                 if (index < 0 || index >= playlist.length) return;
                 currentIndex = index;
@@ -450,9 +449,10 @@
                 hideError();
 
                 const url = `songs/${song.fileName}`;
+                // 只有当src不同时才重新设置，避免重复加载同一首歌
                 if (audio.src !== url) {
                     audio.src = url;
-                    // 设置 MIME 类型提示（可选）
+                    // 设置MIME类型提示（可选）
                     if (song.fileName.endsWith('.m4a')) {
                         audio.type = 'video/mp4';
                     } else if (song.fileName.endsWith('.mp3')) {
@@ -492,8 +492,8 @@
                     });
                 }
 
-                // 预加载下一首
-                preloadNext();
+                // 延迟预加载下一首，给当前歌曲加载留出带宽
+                setTimeout(preloadNext, 1500);
 
                 saveState();
 
@@ -567,7 +567,7 @@
                 }
             };
 
-            // 优化列表渲染：使用 DocumentFragment 减少重绘
+            // 列表渲染优化（使用DocumentFragment减少重绘）
             const renderList = (searchText = '') => {
                 const fragment = document.createDocumentFragment();
                 const lower = searchText.toLowerCase();
@@ -638,7 +638,7 @@
                 }
             };
 
-            // 手势滑动切换歌曲
+            // 手势滑动
             albumArtDiv.addEventListener('touchstart', (e) => {
                 swipeStartX = e.touches[0].clientX;
             });

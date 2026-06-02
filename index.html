@@ -319,9 +319,6 @@
             const SWIPE_THRESHOLD = 50;
             const STORAGE_KEY = 'ttplayer_state';
 
-            // 预加载链接元素
-            let preloadLink = null;
-
             const formatTime = (sec) => {
                 if (isNaN(sec) || sec < 0) return '0:00';
                 const m = Math.floor(sec / 60);
@@ -420,28 +417,7 @@
                 saveState();
             };
 
-            // 预加载下一首（延迟1秒，避免干扰当前播放）
-            const preloadNext = () => {
-                if (playlist.length === 0) return;
-                let nextIndex = (currentIndex + 1) % playlist.length;
-                if (playMode === 'shuffle' && playlist.length > 2) {
-                    do {
-                        nextIndex = Math.floor(Math.random() * playlist.length);
-                    } while (nextIndex === currentIndex);
-                }
-                const nextSong = playlist[nextIndex];
-                if (!nextSong) return;
-
-                const url = `songs/${nextSong.fileName}`;
-                if (preloadLink) preloadLink.remove();
-                preloadLink = document.createElement('link');
-                preloadLink.rel = 'preload';
-                preloadLink.as = 'audio';
-                preloadLink.href = url;
-                document.head.appendChild(preloadLink);
-            };
-
-            // 加载歌曲（核心优化：直接设置src，不重建source）
+            // 核心加载函数：直接设置 src，不重建 source，无预加载
             const loadSong = (index, seekTime = 0) => {
                 if (index < 0 || index >= playlist.length) return;
                 currentIndex = index;
@@ -449,10 +425,9 @@
                 hideError();
 
                 const url = `songs/${song.fileName}`;
-                // 只有当src不同时才重新设置，避免重复加载同一首歌
                 if (audio.src !== url) {
                     audio.src = url;
-                    // 设置MIME类型提示（可选）
+                    // 设置 MIME 类型提示（可选）
                     if (song.fileName.endsWith('.m4a')) {
                         audio.type = 'video/mp4';
                     } else if (song.fileName.endsWith('.mp3')) {
@@ -491,9 +466,6 @@
                         console.warn('自动播放失败:', e);
                     });
                 }
-
-                // 延迟预加载下一首，给当前歌曲加载留出带宽
-                setTimeout(preloadNext, 1500);
 
                 saveState();
 
@@ -567,7 +539,6 @@
                 }
             };
 
-            // 列表渲染优化（使用DocumentFragment减少重绘）
             const renderList = (searchText = '') => {
                 const fragment = document.createDocumentFragment();
                 const lower = searchText.toLowerCase();

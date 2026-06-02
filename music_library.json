@@ -1,5 +1,80 @@
 [
   {
+    "fileName": "0Larmes de caramel-Elsa Kopf.m4a",
+    "fileSize": 1160257,
+    "extension": ".m4a",
+    "artist": "Elsa Kopf",
+    "metadata": {
+      "duration": 186.882,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null,
+      "title": "Larmes de caramel"
+    }
+  },
+  {
+    "fileName": "Peaches-Explicit.m4a",
+    "fileSize": 1240602,
+    "extension": ".m4a",
+    "artist": "Explicit",
+    "metadata": {
+      "duration": 198.082,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null,
+      "title": "Peaches"
+    }
+  },
+  {
+    "fileName": "Peaches-女声版.m4a",
+    "fileSize": 381030,
+    "extension": ".m4a",
+    "artist": "女声版",
+    "metadata": {
+      "duration": 61.232,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null,
+      "title": "Peaches"
+    }
+  },
+  {
+    "fileName": "Room-JelloRio.m4a",
+    "fileSize": 1007595,
+    "extension": ".m4a",
+    "artist": "JelloRio",
+    "metadata": {
+      "duration": 160.541,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null,
+      "title": "Room"
+    }
+  },
+  {
+    "fileName": "Wanting and Waiting-Kathryn Williams.m4a",
+    "fileSize": 1465937,
+    "extension": ".m4a",
+    "artist": "Kathryn Williams",
+    "metadata": {
+      "duration": 234.253,
+      "bitRate": 48000,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp4a-40-2",
+      "bitDepth": null,
+      "title": "Wanting and Waiting"
+    }
+  },
+  {
     "fileName": "山歌好比春江水-鹿晗.m4a",
     "fileSize": 1022262,
     "extension": ".m4a",
@@ -14,31 +89,18 @@
     }
   },
   {
-    "fileName": "开往早晨的午夜-张碧晨.m4a",
-    "fileSize": 1754006,
+    "fileName": "我偏要-张碧晨.m4a",
+    "fileSize": 1555030,
     "extension": ".m4a",
     "artist": "张碧晨",
     "metadata": {
-      "duration": 288.067,
+      "duration": 250,
       "bitRate": 48000,
       "sampleRate": 44100,
       "channels": 2,
       "codec": "mp4a-40-2",
-      "bitDepth": null
-    }
-  },
-  {
-    "fileName": "玫瑰的名字-张雨生.m4a",
-    "fileSize": 1597052,
-    "extension": ".m4a",
-    "artist": "张雨生",
-    "metadata": {
-      "duration": 263.639,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null
+      "bitDepth": null,
+      "title": "我偏要"
     }
   },
   {

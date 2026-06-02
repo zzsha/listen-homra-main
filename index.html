@@ -256,22 +256,6 @@
             background: #c97e2a;
             border-radius: 4px;
         }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f5d742;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -436,12 +420,11 @@
                 saveState();
             };
 
-            // 预加载下一首音频
+            // 预加载下一首音频（使用相对路径）
             const preloadNext = () => {
                 if (playlist.length === 0) return;
                 let nextIndex = (currentIndex + 1) % playlist.length;
                 if (playMode === 'shuffle' && playlist.length > 2) {
-                    // 随机模式：预加载一个随机索引（避免与当前相同）
                     do {
                         nextIndex = Math.floor(Math.random() * playlist.length);
                     } while (nextIndex === currentIndex);
@@ -450,7 +433,6 @@
                 if (!nextSong) return;
 
                 const url = `songs/${nextSong.fileName}`;
-                // 移除旧的预加载链接（避免堆积）
                 if (preloadLink) {
                     preloadLink.remove();
                 }
@@ -467,7 +449,6 @@
                 const song = playlist[currentIndex];
                 hideError();
 
-                // 关键优化：直接设置 src，避免重建 source 元素
                 const url = `songs/${song.fileName}`;
                 if (audio.src !== url) {
                     audio.src = url;
@@ -591,7 +572,6 @@
                 const fragment = document.createDocumentFragment();
                 const lower = searchText.toLowerCase();
                 let visibleCount = 0;
-                // 限制最多显示200首，避免过多DOM节点（可根据需要调整）
                 const MAX_VISIBLE = 200;
                 for (let idx = 0; idx < playlist.length && visibleCount < MAX_VISIBLE; idx++) {
                     const song = playlist[idx];
@@ -630,14 +610,11 @@
                     if (!res.ok) throw new Error();
                     const rawData = await res.json();
 
-                    playlist = rawData.map((item) => {
-                        const fileName = item.fileName;
-                        return { 
-                            fileName, 
-                            title: extractTitle(fileName), 
-                            artist: extractArtist(fileName)
-                        };
-                    });
+                    playlist = rawData.map((item) => ({
+                        fileName: item.fileName,
+                        title: extractTitle(item.fileName),
+                        artist: extractArtist(item.fileName)
+                    }));
 
                     if (!playlist.length) throw new Error();
 
@@ -694,7 +671,6 @@
                 }
             });
 
-            // 增加简单的重试机制（加载失败后自动重试一次）
             let retryCount = 0;
             audio.addEventListener('error', (e) => {
                 if (retryCount < 1) {

@@ -11,76 +11,39 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
-      - name: Install dependencies
+
+      - name: Install dependencies and ffmpeg with libfdk_aac
         run: |
           sudo apt-get update
-          sudo apt-get install -y mediainfo ffmpeg
-      
-      - name: Convert MP3 to M4A (Force video/mp4 MIME)
+          sudo apt-get install -y mediainfo
+          # 下载包含 libfdk_aac 的静态 ffmpeg
+          wget -q https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
+          tar xf ffmpeg-master-latest-linux64-gpl.tar.xz
+          sudo mv ffmpeg-master-latest-linux64-gpl/bin/ffmpeg /usr/local/bin/
+          ffmpeg -version | grep fdk_aac  # 验证
+
+      - name: Convert MP3 to HE-AAC M4A
         run: |
-          echo "🔄 开始转换 MP3 到 M4A (强制 MIME = video/mp4)..."
-          CONVERTED_COUNT=0
-          
           for mp3file in ./songs/*.mp3; do
             if [ -f "$mp3file" ]; then
               filename=$(basename "$mp3file" .mp3)
-              m4afile="./songs/${filename}.m4a"
-              
-              echo "转换: $mp3file"
-              
-              # 使用 -f mp4 并指定 brand=mp42 以生成 video/mp4 MIME
-              ffmpeg -i "$mp3file" \
-                -c:a aac \
-                -b:a 48k \
-                -ac 2 \
-                -ar 44100 \
-                -movflags +faststart \
-                -f mp4 \
-                -brand mp42 \
-                "$m4afile" -y
-              
-              if [ $? -eq 0 ] && [ -f "$m4afile" ] && [ -s "$m4afile" ]; then
-                # 验证 MIME 类型
-                MIME=$(file --mime-type "$m4afile" | cut -d' ' -f2)
-                if [ "$MIME" = "video/mp4" ] || [ "$MIME" = "audio/mp4" ]; then
-                  rm -f "$mp3file"
-                  echo "✅ 转换成功: ${filename}.m4a (MIME: $MIME)"
-                  CONVERTED_COUNT=$((CONVERTED_COUNT + 1))
-                else
-                  echo "⚠️ 意外的 MIME: $MIME，尝试另一种方法..."
-                  # 备选：使用 ipod 格式然后重新标记
-                  ffmpeg -i "$mp3file" -c:a aac -b:a 48k -f ipod "./songs/${filename}_temp.m4a" -y
-                  ffmpeg -i "./songs/${filename}_temp.m4a" -c copy -map 0 -brand mp42 -f mp4 "$m4afile" -y
-                  rm -f "./songs/${filename}_temp.m4a"
-                  NEW_MIME=$(file --mime-type "$m4afile" | cut -d' ' -f2)
-                  if [ "$NEW_MIME" = "video/mp4" ]; then
-                    rm -f "$mp3file"
-                    echo "✅ 备选方法成功: ${filename}.m4a (MIME: $NEW_MIME)"
-                    CONVERTED_COUNT=$((CONVERTED_COUNT + 1))
-                  else
-                    echo "❌ 仍然失败，MIME: $NEW_MIME"
-                    rm -f "$m4afile"
-                  fi
-                fi
-              else
-                echo "❌ 转换失败: $mp3file"
-              fi
+              # 使用 libfdk_aac 编码器，HE-AAC 参数，48kbps，与原始文件匹配
+              ffmpeg -i "$mp3file" -c:a libfdk_aac -profile:a aac_he -b:a 48k -ac 2 -ar 44100 -movflags +faststart -f mp4 -brand mp42 "./songs/${filename}.m4a" -y
+              rm -f "$mp3file"
             fi
           done
-          
-          echo "📊 成功转换 $CONVERTED_COUNT 个 MP3 文件"
-      
+
       - name: Generate music library
+        # ... 保持不变，继续使用原内容
         run: |
           node -e '
           const fs = require("fs");
@@ -132,8 +95,9 @@ jobs:
           console.log(`✅ 找到 ${songs.length} 首歌曲`);
           fs.writeFileSync(OUTPUT, JSON.stringify(songs, null, 2));
           '
-      
+
       - name: Update README
+        # ... 保持原来的 README 生成逻辑不变
         run: |
           node -e '
           const fs = require("fs");
@@ -169,7 +133,7 @@ jobs:
           fs.writeFileSync("./README.md", readme);
           console.log("✅ README 已更新");
           '
-      
+
       - name: Commit changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"

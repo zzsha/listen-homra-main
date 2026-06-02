@@ -26,6 +26,27 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mediainfo ffmpeg
       
+      - name: Convert MP3 to M4A
+        run: |
+          echo "🔄 开始转换 MP3 到 M4A..."
+          CONVERTED_COUNT=0
+          for mp3file in ./songs/*.mp3; do
+            if [ -f "$mp3file" ]; then
+              filename=$(basename "$mp3file" .mp3)
+              m4afile="./songs/${filename}.m4a"
+              echo "转换: $mp3file -> $m4afile"
+              ffmpeg -i "$mp3file" -c:a aac -b:a 192k -movflags +faststart "$m4afile" -y
+              if [ $? -eq 0 ]; then
+                rm "$mp3file"
+                echo "✅ 转换成功并删除原始文件: $mp3file"
+                CONVERTED_COUNT=$((CONVERTED_COUNT + 1))
+              else
+                echo "❌ 转换失败: $mp3file"
+              fi
+            fi
+          done
+          echo "📊 共转换 $CONVERTED_COUNT 个 MP3 文件"
+      
       - name: Generate music library
         run: |
           node -e '

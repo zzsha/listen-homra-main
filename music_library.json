@@ -15,21 +15,6 @@
     }
   },
   {
-    "fileName": "Peaches-Explicit.m4a",
-    "fileSize": 1240602,
-    "extension": ".m4a",
-    "artist": "Explicit",
-    "metadata": {
-      "duration": 198.082,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null,
-      "title": "Peaches"
-    }
-  },
-  {
     "fileName": "Peaches-女声版.m4a",
     "fileSize": 381030,
     "extension": ".m4a",

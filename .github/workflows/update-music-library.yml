@@ -28,25 +28,23 @@ jobs:
 
       - name: Convert MP3 to M4A (AAC-LC 48k, video/mp4 MIME)
         run: |
+          echo "开始转换 MP3 到 M4A..."
           for mp3file in ./songs/*.mp3; do
             if [ -f "$mp3file" ]; then
               filename=$(basename "$mp3file" .mp3)
-              echo "转换: $mp3file"
-              # 使用系统 ffmpeg 的 aac 编码器，比特率 48k，强制封装为 mp4（brand mp42）
-              ffmpeg -i "$mp3file" \
-                -c:a aac -b:a 48k -ac 2 -ar 44100 \
-                -movflags +faststart \
-                -f mp4 -brand mp42 \
-                "./songs/${filename}.m4a" -y
-              if [ $? -eq 0 ]; then
+              m4afile="./songs/${filename}.m4a"
+              echo "转换: $mp3file -> $m4afile"
+              ffmpeg -i "$mp3file" -c:a aac -b:a 48k -ac 2 -ar 44100 -movflags +faststart -f mp4 -brand mp42 "$m4afile" -y
+              if [ $? -eq 0 ] && [ -f "$m4afile" ] && [ -s "$m4afile" ]; then
                 rm -f "$mp3file"
-                echo "✅ 转换成功: ${filename}.m4a"
+                echo "✅ 转换成功并删除原文件: $mp3file"
               else
                 echo "❌ 转换失败: $mp3file"
                 exit 1
               fi
             fi
           done
+          echo "转换完成。"
 
       - name: Generate music library
         run: |
@@ -142,6 +140,6 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add music_library.json README.md
+          git add songs/ music_library.json README.md
           git diff --cached --quiet || git commit -m "chore: update music library [skip ci]"
           git push

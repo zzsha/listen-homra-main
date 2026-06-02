@@ -1,0 +1,46 @@
+# .github/workflows/debug-m4a.yml
+name: Debug M4A Comparison
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install mediainfo
+        run: sudo apt-get update && sudo apt-get install -y mediainfo
+      
+      - name: Analyze working and broken M4A files
+        run: |
+          echo "=== 能播放的 M4A 文件（开往早晨的午夜） ==="
+          WORKING=$(ls ./songs/*开往早晨的午夜*.m4a 2>/dev/null | head -1)
+          if [ -f "$WORKING" ]; then
+            mediainfo "$WORKING"
+            echo ""
+            echo "MIME: $(file --mime-type "$WORKING")"
+          else
+            echo "未找到能播放的文件"
+          fi
+          
+          echo ""
+          echo "=== 不能播放的 M4A 文件（山歌好比春江水） ==="
+          BROKEN=$(ls ./songs/*山歌*.m4a 2>/dev/null | head -1)
+          if [ -f "$BROKEN" ]; then
+            mediainfo "$BROKEN"
+            echo ""
+            echo "MIME: $(file --mime-type "$BROKEN")"
+          else
+            echo "未找到不能播放的文件"
+          fi
+          
+          echo ""
+          echo "=== 原始 MP3 文件（山歌好比春江水） ==="
+          MP3=$(ls ./songs/*山歌*.mp3 2>/dev/null | head -1)
+          if [ -f "$MP3" ]; then
+            mediainfo "$MP3"
+          else
+            echo "未找到原始MP3"
+          fi

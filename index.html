@@ -36,13 +36,12 @@
             text-align: center;
         }
 
-        /* 封面容器：自适应图片比例，不裁剪，居中显示 */
         .album-art {
             width: 100%;
             max-width: 280px;
             margin: 0 auto 24px;
             border-radius: 18px;
-            overflow: hidden;          /* 圆角裁切，但不裁切图片内容 */
+            overflow: hidden;
             box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(218, 165, 32, 0.35);
             background: linear-gradient(135deg, #3a2a1a, #1e160e);
             display: flex;
@@ -50,12 +49,11 @@
             align-items: center;
         }
 
-        /* 封面图片：完整显示，不变形 */
         #album-cover {
             width: 100%;
             height: auto;
             display: block;
-            object-fit: contain;     /* 确保整个图片可见，不裁剪 */
+            object-fit: contain;
             border-radius: 18px;
         }
 
@@ -258,6 +256,22 @@
             background: #c97e2a;
             border-radius: 4px;
         }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f5d742;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -290,7 +304,7 @@
         </div>
         <div id="error-message" class="error-message"></div>
     </div>
-    <audio id="audio-player" preload="auto"></audio>
+    <audio id="audio-player" preload="auto" playsinline></audio>
 
     <script>
         (function() {
@@ -320,6 +334,9 @@
             let swipeStartX = 0;
             const SWIPE_THRESHOLD = 50;
             const STORAGE_KEY = 'ttplayer_state';
+
+            // 预加载资源管理
+            let preloadLink = null;
 
             const formatTime = (sec) => {
                 if (isNaN(sec) || sec < 0) return '0:00';
@@ -419,30 +436,57 @@
                 saveState();
             };
 
+            // 预加载下一首音频
+            const preloadNext = () => {
+                if (playlist.length === 0) return;
+                let nextIndex = (currentIndex + 1) % playlist.length;
+                if (playMode === 'shuffle' && playlist.length > 2) {
+                    // 随机模式：预加载一个随机索引（避免与当前相同）
+                    do {
+                        nextIndex = Math.floor(Math.random() * playlist.length);
+                    } while (nextIndex === currentIndex);
+                }
+                const nextSong = playlist[nextIndex];
+                if (!nextSong) return;
+
+                const url = `songs/${nextSong.fileName}`;
+                // 移除旧的预加载链接（避免堆积）
+                if (preloadLink) {
+                    preloadLink.remove();
+                }
+                preloadLink = document.createElement('link');
+                preloadLink.rel = 'preload';
+                preloadLink.as = 'audio';
+                preloadLink.href = url;
+                document.head.appendChild(preloadLink);
+            };
+
             const loadSong = (index, seekTime = 0) => {
                 if (index < 0 || index >= playlist.length) return;
                 currentIndex = index;
                 const song = playlist[currentIndex];
                 hideError();
 
-                audio.innerHTML = '';
-                const source = document.createElement('source');
-                source.src = `songs/${song.fileName}`;
-                // 根据扩展名设置 MIME 类型（支持 mp3 和 m4a）
-                if (song.fileName.endsWith('.mp3')) {
-                    source.type = 'audio/mpeg';
-                } else if (song.fileName.endsWith('.m4a')) {
-                    source.type = 'audio/mp4';
-                } else {
-                    source.type = 'audio/ogg';
+                // 关键优化：直接设置 src，避免重建 source 元素
+                const url = `songs/${song.fileName}`;
+                if (audio.src !== url) {
+                    audio.src = url;
+                    // 设置 MIME 类型提示（可选）
+                    if (song.fileName.endsWith('.m4a')) {
+                        audio.type = 'video/mp4';
+                    } else if (song.fileName.endsWith('.mp3')) {
+                        audio.type = 'audio/mpeg';
+                    } else {
+                        audio.type = 'audio/ogg';
+                    }
+                    audio.load();
                 }
-                audio.appendChild(source);
 
                 titleEl.textContent = song.title;
                 artistEl.textContent = song.artist;
-                // 封面图使用 cover.gif（可根据歌曲名动态设置，这里沿用同一张）
                 coverImg.src = 'cover.gif';
 
+                // 更新列表高亮
                 const items = document.querySelectorAll('#song-list li');
                 items.forEach(li => {
                     li.classList.remove('playing');
@@ -453,8 +497,6 @@
                 durationSpan.textContent = '0:00';
                 progressBar.value = 0;
 
-                audio.load();
-
                 if (seekTime > 0) {
                     const onLoaded = () => {
                         audio.currentTime = seekTime;
@@ -464,8 +506,13 @@
                 }
 
                 if (isPlaying) {
-                    audio.play().catch(() => {});
+                    audio.play().catch(e => {
+                        console.warn('自动播放失败:', e);
+                    });
                 }
+
+                // 预加载下一首
+                preloadNext();
 
                 saveState();
 
@@ -539,12 +586,17 @@
                 }
             };
 
+            // 优化列表渲染：使用 DocumentFragment 减少重绘
             const renderList = (searchText = '') => {
-                songListUl.innerHTML = '';
+                const fragment = document.createDocumentFragment();
                 const lower = searchText.toLowerCase();
-                playlist.forEach((song, idx) => {
+                let visibleCount = 0;
+                // 限制最多显示200首，避免过多DOM节点（可根据需要调整）
+                const MAX_VISIBLE = 200;
+                for (let idx = 0; idx < playlist.length && visibleCount < MAX_VISIBLE; idx++) {
+                    const song = playlist[idx];
                     const match = !searchText || song.title.toLowerCase().includes(lower) || song.artist.toLowerCase().includes(lower);
-                    if (!match) return;
+                    if (!match) continue;
                     const li = document.createElement('li');
                     li.dataset.index = idx;
                     li.innerHTML = `<span>${song.title}</span><span style="font-size:0.7rem; opacity:0.7;">${song.artist}</span>`;
@@ -556,8 +608,18 @@
                         }
                     };
                     if (idx === currentIndex) li.classList.add('playing');
-                    songListUl.appendChild(li);
-                });
+                    fragment.appendChild(li);
+                    visibleCount++;
+                }
+                if (playlist.length > MAX_VISIBLE && visibleCount === MAX_VISIBLE) {
+                    const moreLi = document.createElement('li');
+                    moreLi.textContent = `... 还有 ${playlist.length - MAX_VISIBLE} 首，请使用搜索`;
+                    moreLi.style.textAlign = 'center';
+                    moreLi.style.cursor = 'default';
+                    fragment.appendChild(moreLi);
+                }
+                songListUl.innerHTML = '';
+                songListUl.appendChild(fragment);
             };
 
             const loadLibrary = async () => {
@@ -632,10 +694,20 @@
                 }
             });
 
+            // 增加简单的重试机制（加载失败后自动重试一次）
+            let retryCount = 0;
             audio.addEventListener('error', (e) => {
-                console.error('音频错误:', e);
-                showError('音频无法播放，请检查文件格式');
-                titleEl.textContent = '播放失败';
+                if (retryCount < 1) {
+                    retryCount++;
+                    console.warn('音频加载失败，重试中...');
+                    setTimeout(() => {
+                        loadSong(currentIndex, audio.currentTime);
+                    }, 1000);
+                } else {
+                    showError('音频无法播放，请检查文件格式');
+                    titleEl.textContent = '播放失败';
+                    retryCount = 0;
+                }
             });
 
             const startDrag = () => {

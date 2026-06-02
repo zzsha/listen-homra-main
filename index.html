@@ -36,21 +36,27 @@
             text-align: center;
         }
 
+        /* 封面容器：自适应图片比例，不裁剪，居中显示 */
         .album-art {
-            width: 180px;
-            height: 180px;
+            width: 100%;
+            max-width: 280px;
             margin: 0 auto 24px;
             border-radius: 18px;
-            overflow: hidden;
+            overflow: hidden;          /* 圆角裁切，但不裁切图片内容 */
             box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(218, 165, 32, 0.35);
             background: linear-gradient(135deg, #3a2a1a, #1e160e);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
+        /* 封面图片：完整显示，不变形 */
         #album-cover {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
             display: block;
+            object-fit: contain;     /* 确保整个图片可见，不裁剪 */
+            border-radius: 18px;
         }
 
         #current-title {
@@ -258,7 +264,6 @@
     <div class="player-container">
         <div class="album-art" id="album-art-area">
             <img id="album-cover" src="cover.gif" alt="封面">
-            
         </div>
         <h1 id="current-title">加载中...</h1>
         <p id="current-artist">-</p>
@@ -324,7 +329,7 @@
             };
 
             const extractTitle = (fileName) => {
-                let name = fileName.replace(/\.m4a$/, '');
+                let name = fileName.replace(/\.(m4a|mp3|ogg)$/, '');
                 const lastDashIndex = name.lastIndexOf('-');
                 if (lastDashIndex !== -1) {
                     name = name.substring(0, lastDashIndex).trim();
@@ -333,7 +338,7 @@
             };
 
             const extractArtist = (fileName) => {
-                let name = fileName.replace(/\.m4a$/, '');
+                let name = fileName.replace(/\.(m4a|mp3|ogg)$/, '');
                 const lastDashIndex = name.lastIndexOf('-');
                 if (lastDashIndex !== -1) {
                     const artist = name.substring(lastDashIndex + 1).trim();
@@ -423,11 +428,19 @@
                 audio.innerHTML = '';
                 const source = document.createElement('source');
                 source.src = `songs/${song.fileName}`;
-                source.type = 'audio/mp4';
+                // 根据扩展名设置 MIME 类型（支持 mp3 和 m4a）
+                if (song.fileName.endsWith('.mp3')) {
+                    source.type = 'audio/mpeg';
+                } else if (song.fileName.endsWith('.m4a')) {
+                    source.type = 'audio/mp4';
+                } else {
+                    source.type = 'audio/ogg';
+                }
                 audio.appendChild(source);
 
                 titleEl.textContent = song.title;
                 artistEl.textContent = song.artist;
+                // 封面图使用 cover.gif（可根据歌曲名动态设置，这里沿用同一张）
                 coverImg.src = 'cover.gif';
 
                 const items = document.querySelectorAll('#song-list li');
@@ -474,7 +487,9 @@
                     isPlaying = true;
                     playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
                     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-                }).catch(() => {
+                }).catch((e) => {
+                    console.error('播放失败:', e);
+                    showError('无法播放，请检查文件格式');
                     isPlaying = false;
                     playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                 });
@@ -584,6 +599,7 @@
                 }
             };
 
+            // 手势滑动切换歌曲
             albumArtDiv.addEventListener('touchstart', (e) => {
                 swipeStartX = e.touches[0].clientX;
             });
@@ -616,7 +632,8 @@
                 }
             });
 
-            audio.addEventListener('error', () => {
+            audio.addEventListener('error', (e) => {
+                console.error('音频错误:', e);
                 showError('音频无法播放，请检查文件格式');
                 titleEl.textContent = '播放失败';
             });

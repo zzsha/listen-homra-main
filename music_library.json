@@ -1,71 +1,12 @@
 [
   {
-    "fileName": "0Larmes de caramel-Elsa Kopf.m4a",
-    "fileSize": 1160257,
+    "fileName": "像晴天像雨天-汪苏泷 .m4a",
+    "cdnUrl": "https://cdn.jsdelivr.net/gh/zzsha/listen-homra-main@main/songs/%E5%83%8F%E6%99%B4%E5%A4%A9%E5%83%8F%E9%9B%A8%E5%A4%A9-%E6%B1%AA%E8%8B%8F%E6%B3%B7%20.m4a",
+    "fileSize": 1454560,
     "extension": ".m4a",
-    "artist": "Elsa Kopf",
+    "artist": "汪苏泷",
     "metadata": {
-      "duration": 186.882,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null,
-      "title": "Larmes de caramel"
-    }
-  },
-  {
-    "fileName": "Peaches-女声版.m4a",
-    "fileSize": 381030,
-    "extension": ".m4a",
-    "artist": "女声版",
-    "metadata": {
-      "duration": 61.232,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null,
-      "title": "Peaches"
-    }
-  },
-  {
-    "fileName": "Room-JelloRio.m4a",
-    "fileSize": 1007595,
-    "extension": ".m4a",
-    "artist": "JelloRio",
-    "metadata": {
-      "duration": 160.541,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null,
-      "title": "Room"
-    }
-  },
-  {
-    "fileName": "Wanting and Waiting-Kathryn Williams.m4a",
-    "fileSize": 1465937,
-    "extension": ".m4a",
-    "artist": "Kathryn Williams",
-    "metadata": {
-      "duration": 234.253,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null,
-      "title": "Wanting and Waiting"
-    }
-  },
-  {
-    "fileName": "山歌好比春江水-鹿晗.m4a",
-    "fileSize": 1022262,
-    "extension": ".m4a",
-    "artist": "鹿晗",
-    "metadata": {
-      "duration": 163.8,
+      "duration": 236.751,
       "bitRate": 48000,
       "sampleRate": 44100,
       "channels": 2,
@@ -75,6 +16,7 @@
   },
   {
     "fileName": "我偏要-张碧晨.m4a",
+    "cdnUrl": "https://cdn.jsdelivr.net/gh/zzsha/listen-homra-main@main/songs/%E6%88%91%E5%81%8F%E8%A6%81-%E5%BC%A0%E7%A2%A7%E6%99%A8.m4a",
     "fileSize": 1555030,
     "extension": ".m4a",
     "artist": "张碧晨",
@@ -86,21 +28,6 @@
       "codec": "mp4a-40-2",
       "bitDepth": null,
       "title": "我偏要"
-    }
-  },
-  {
-    "fileName": "第二人生-五月天.m4a",
-    "fileSize": 1686983,
-    "extension": ".m4a",
-    "artist": "五月天",
-    "metadata": {
-      "duration": 269.014,
-      "bitRate": 48000,
-      "sampleRate": 44100,
-      "channels": 2,
-      "codec": "mp4a-40-2",
-      "bitDepth": null,
-      "title": "第二人生"
     }
   }
 ]

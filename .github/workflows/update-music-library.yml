@@ -64,15 +64,24 @@ jobs:
           
           echo "所有转换完成。"
 
-      - name: Generate music library
+      - name: Generate music library with CDN URLs
         run: |
           node -e '
           const fs = require("fs");
           const path = require("path");
           const { execSync } = require("child_process");
           
+          // 从环境变量获取仓库信息（用于 CDN 拼接）
+          const REPO_OWNER = process.env.GITHUB_REPOSITORY_OWNER || "";
+          const REPO_NAME = process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split("/")[1] : "";
+          const BRANCH = process.env.GITHUB_REF_NAME || "main";
+          
+          // 正确的 CDN 基础地址（cdn.jsdelivr.net）
+          const CDN_BASE = `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${BRANCH}`;
+          
           const SONGS_DIR = "./songs";
           const OUTPUT = "./music_library.json";
+          // 支持多种音频扩展名（转换后主要是 .m4a）
           const EXTENSIONS = [".m4a", ".mp3", ".flac", ".wav", ".ogg", ".opus", ".aac"];
           
           function getMetadata(file) {
@@ -103,8 +112,11 @@ jobs:
                   const name = f.slice(0, -path.extname(f).length);
                   const dash = name.lastIndexOf("-");
                   const artist = dash !== -1 ? name.substring(dash + 1).trim() : "千千音乐";
+                  // 生成 CDN 完整 URL
+                  const cdnUrl = `${CDN_BASE}/songs/${encodeURIComponent(f)}`;
                   return {
                     fileName: f,
+                    cdnUrl: cdnUrl,
                     fileSize: stats.size,
                     extension: path.extname(f),
                     artist: artist,
@@ -115,8 +127,12 @@ jobs:
             : [];
           
           console.log(`✅ 找到 ${songs.length} 首歌曲`);
+          console.log(`CDN 基础地址: ${CDN_BASE}`);
           fs.writeFileSync(OUTPUT, JSON.stringify(songs, null, 2));
           '
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
 
       - name: Update README
         run: |

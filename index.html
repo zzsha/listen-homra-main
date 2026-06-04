@@ -417,14 +417,15 @@
                 saveState();
             };
 
-            // 核心加载函数：直接设置 src，不重建 source，无预加载
+            // 核心加载函数：优先使用 CDN 地址，若无则用相对路径
             const loadSong = (index, seekTime = 0) => {
                 if (index < 0 || index >= playlist.length) return;
                 currentIndex = index;
                 const song = playlist[currentIndex];
                 hideError();
 
-                const url = `songs/${song.fileName}`;
+                // 优先使用 CDN URL（如果存在），否则回退到本地路径
+                const url = song.cdnUrl || `songs/${song.fileName}`;
                 if (audio.src !== url) {
                     audio.src = url;
                     // 设置 MIME 类型提示（可选）
@@ -581,8 +582,10 @@
                     if (!res.ok) throw new Error();
                     const rawData = await res.json();
 
+                    // 保存 cdnUrl，以便在 loadSong 中优先使用
                     playlist = rawData.map((item) => ({
                         fileName: item.fileName,
+                        cdnUrl: item.cdnUrl,   // 新增字段
                         title: extractTitle(item.fileName),
                         artist: extractArtist(item.fileName)
                     }));
